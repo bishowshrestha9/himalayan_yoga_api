@@ -23,9 +23,9 @@ services:
       - key: SESSION_DRIVER
         value: array
       # Swagger Configuration
-      # Use relative paths for assets (works better on Render)
+      # Use absolute paths for assets (required for php artisan serve)
       - key: L5_SWAGGER_USE_ABSOLUTE_PATH
-        value: false
+        value: true
       - key: L5_SWAGGER_UI_ASSETS_PATH
         value: vendor/swagger-api/swagger-ui/dist/
       - key: L5_SWAGGER_GENERATE_ALWAYS

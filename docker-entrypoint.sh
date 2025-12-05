@@ -143,6 +143,7 @@ php artisan l5-swagger:generate || true
 
 # Export all environment variables for php artisan serve
 export APP_KEY="$APP_KEY"
+export APP_URL="${APP_URL:-${RENDER_EXTERNAL_URL:-http://localhost}}"
 export SESSION_DRIVER="${SESSION_DRIVER:-array}"
 export DB_CONNECTION="${DB_CONNECTION:-mysql}"
 export DB_HOST="$DB_HOST_FINAL"
