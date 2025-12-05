@@ -70,11 +70,39 @@ fi
 
 echo "APP_KEY is set: ${APP_KEY:0:20}..."
 
+# Verify database credentials are set
+echo "Checking database configuration..."
+DB_HOST_FINAL="${DB_HOST:-$(grep '^DB_HOST=' .env 2>/dev/null | cut -d '=' -f2- || echo '127.0.0.1')}"
+DB_DATABASE_FINAL="${DB_DATABASE:-$(grep '^DB_DATABASE=' .env 2>/dev/null | cut -d '=' -f2- || echo 'laravel')}"
+DB_USERNAME_FINAL="${DB_USERNAME:-$(grep '^DB_USERNAME=' .env 2>/dev/null | cut -d '=' -f2- || echo 'root')}"
+DB_PASSWORD_FINAL="${DB_PASSWORD:-$(grep '^DB_PASSWORD=' .env 2>/dev/null | cut -d '=' -f2- || echo '')}"
+
+echo "DB_CONNECTION: ${DB_CONNECTION:-mysql}"
+echo "DB_HOST: ${DB_HOST_FINAL}"
+echo "DB_DATABASE: ${DB_DATABASE_FINAL}"
+echo "DB_USERNAME: ${DB_USERNAME_FINAL}"
+echo "DB_PASSWORD: ${DB_PASSWORD_FINAL:0:3}***"
+
+# Check if database credentials are properly set
+if [ -z "$DB_HOST_FINAL" ] || [ "$DB_HOST_FINAL" = "127.0.0.1" ] || [ "$DB_HOST_FINAL" = "localhost" ]; then
+    echo "WARNING: DB_HOST is set to localhost/127.0.0.1. This won't work on Render."
+    echo "Please set DB_HOST, DB_DATABASE, DB_USERNAME, and DB_PASSWORD in Render Dashboard."
+    echo "Or configure a Render managed database using fromDatabase in render.yaml"
+fi
+
+if [ -z "$DB_DATABASE_FINAL" ] || [ "$DB_DATABASE_FINAL" = "laravel" ]; then
+    echo "WARNING: DB_DATABASE is not set or using default. Please configure your database."
+fi
+
 # Clear and cache configuration (these commands need APP_KEY)
 # Use --env to ensure environment variables are used
 php artisan config:clear --env=production || true
 php artisan route:clear || true
 php artisan view:clear || true
+
+# Test database connection (optional - will show error if can't connect)
+echo "Testing database connection..."
+php artisan db:show --database=mysql 2>&1 || echo "Database connection test failed - make sure credentials are correct"
 
 # Generate Swagger documentation
 php artisan l5-swagger:generate || true
@@ -82,13 +110,21 @@ php artisan l5-swagger:generate || true
 # Run migrations (optional - uncomment if you want auto-migrations)
 # php artisan migrate --force || true
 
+# Export database variables for use in exec (use final values)
+export DB_CONNECTION="${DB_CONNECTION:-mysql}"
+export DB_HOST="$DB_HOST_FINAL"
+export DB_PORT="${DB_PORT:-3306}"
+export DB_DATABASE="$DB_DATABASE_FINAL"
+export DB_USERNAME="$DB_USERNAME_FINAL"
+export DB_PASSWORD="$DB_PASSWORD_FINAL"
+
 # Start the application with all necessary environment variables
 exec env \
     APP_KEY="$APP_KEY" \
-    DB_CONNECTION="${DB_CONNECTION:-mysql}" \
-    DB_HOST="${DB_HOST:-127.0.0.1}" \
-    DB_PORT="${DB_PORT:-3306}" \
-    DB_DATABASE="${DB_DATABASE:-laravel}" \
-    DB_USERNAME="${DB_USERNAME:-root}" \
-    DB_PASSWORD="${DB_PASSWORD:-}" \
+    DB_CONNECTION="$DB_CONNECTION" \
+    DB_HOST="$DB_HOST_FINAL" \
+    DB_PORT="$DB_PORT" \
+    DB_DATABASE="$DB_DATABASE_FINAL" \
+    DB_USERNAME="$DB_USERNAME_FINAL" \
+    DB_PASSWORD="$DB_PASSWORD_FINAL" \
     php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
