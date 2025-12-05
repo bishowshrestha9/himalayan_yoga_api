@@ -30,10 +30,15 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction --no-script
 # Copy all application files
 COPY . .
 
+# Copy Swagger UI assets to public directory for static serving
+RUN mkdir -p /var/www/html/public/docs/asset && \
+    cp -r /var/www/html/vendor/swagger-api/swagger-ui/dist/* /var/www/html/public/docs/asset/ 2>/dev/null || echo "Swagger assets not found in vendor, will be served via routes"
+
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html/storage \
-    && chmod -R 755 /var/www/html/bootstrap/cache
+    && chmod -R 755 /var/www/html/bootstrap/cache \
+    && chmod -R 755 /var/www/html/public/docs 2>/dev/null || true
 
 # Run post-install scripts
 RUN composer dump-autoload --optimize || true

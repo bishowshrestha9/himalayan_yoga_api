@@ -27,7 +27,7 @@ services:
       - key: L5_SWAGGER_USE_ABSOLUTE_PATH
         value: true
       - key: L5_SWAGGER_UI_ASSETS_PATH
-        value: vendor/swagger-api/swagger-ui/dist/
+        value: public/docs/asset/
       - key: L5_SWAGGER_GENERATE_ALWAYS
         value: false
       - key: L5_FORMAT_TO_USE_FOR_DOCS

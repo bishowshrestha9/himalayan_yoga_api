@@ -159,6 +159,17 @@ php artisan view:clear || true
 echo "Testing database connection..."
 php artisan db:show --database=mysql 2>&1 || echo "Database connection test failed - make sure credentials are correct"
 
+# Copy Swagger UI assets to public directory (required for serving)
+echo "Copying Swagger UI assets to public directory..."
+mkdir -p public/docs/asset 2>/dev/null || true
+if [ -d "vendor/swagger-api/swagger-ui/dist" ]; then
+    cp -r vendor/swagger-api/swagger-ui/dist/* public/docs/asset/ 2>/dev/null || true
+    ls -la public/docs/asset/ | head -5 || echo "Assets directory is empty"
+    echo "Swagger assets copied to public/docs/asset/"
+else
+    echo "ERROR: Swagger vendor assets not found in vendor/swagger-api/swagger-ui/dist"
+fi
+
 # Generate Swagger documentation
 php artisan l5-swagger:generate || true
 
