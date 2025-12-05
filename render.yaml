@@ -12,37 +12,20 @@ services:
         value: false
       - key: APP_KEY
         generateValue: true
-      # Database Configuration
+      # Database Configuration - External MySQL Database
+      # IMPORTANT: Set these in Render Dashboard → Environment:
+      # DB_HOST, DB_DATABASE, DB_USERNAME, DB_PASSWORD
       - key: DB_CONNECTION
         value: mysql
-      # For Render managed database, uncomment and update the database service name:
-      - key: DB_HOST
-        fromDatabase:
-          name: himalayan-yoga-db  # Change this to your actual database service name
-          property: host
-      - key: DB_DATABASE
-        fromDatabase:
-          name: himalayan-yoga-db  # Change this to your actual database service name
-          property: database
-      - key: DB_USERNAME
-        fromDatabase:
-          name: himalayan-yoga-db  # Change this to your actual database service name
-          property: user
-      - key: DB_PASSWORD
-        fromDatabase:
-          name: himalayan-yoga-db  # Change this to your actual database service name
-          property: password
       - key: DB_PORT
         value: 3306
-      # Alternative: For external MySQL, comment out fromDatabase above and set these in Render Dashboard:
-      # DB_HOST, DB_DATABASE, DB_USERNAME, DB_PASSWORD
       # Session Configuration (use array for API - no database required)
       - key: SESSION_DRIVER
         value: array
       # Swagger Configuration
-      # Note: Set APP_URL in Render Dashboard to your service URL (e.g., https://himalayan-yogini-api.onrender.com)
+      # Use relative paths for assets (works better on Render)
       - key: L5_SWAGGER_USE_ABSOLUTE_PATH
-        value: true
+        value: false
       - key: L5_SWAGGER_UI_ASSETS_PATH
         value: vendor/swagger-api/swagger-ui/dist/
       - key: L5_SWAGGER_GENERATE_ALWAYS
@@ -51,3 +34,5 @@ services:
         value: json
       - key: L5_SWAGGER_DOCUMENTATIONS_DEFAULT_API_TITLE
         value: Himalayan Yoga API
+      # Optional: Set APP_URL in Render Dashboard if you need absolute URLs elsewhere
+      # APP_URL = https://himalayan-yogini-api.onrender.com
