@@ -31,7 +31,7 @@ Core capabilities:
 ## API Documentation
 Once the application is running, you can access the Swagger API documentation at:
 ```
-http://your-app-url/api/documentation
+https://himalayan-yogini-api.onrender.com/api/documentation
 ```
 
 ## Installation
