@@ -13,6 +13,21 @@ if [ ! -f .env ]; then
     fi
 fi
 
+# Ensure database connection is set to mysql (not sqlite)
+if ! grep -q "^DB_CONNECTION=" .env 2>/dev/null; then
+    echo "DB_CONNECTION=mysql" >> .env
+elif ! grep -q "^DB_CONNECTION=mysql" .env; then
+    sed -i "s|^DB_CONNECTION=.*|DB_CONNECTION=mysql|" .env
+fi
+
+# Set database environment variables if provided
+[ ! -z "$DB_CONNECTION" ] && (grep -q "^DB_CONNECTION=" .env && sed -i "s|^DB_CONNECTION=.*|DB_CONNECTION=$DB_CONNECTION|" .env || echo "DB_CONNECTION=$DB_CONNECTION" >> .env)
+[ ! -z "$DB_HOST" ] && (grep -q "^DB_HOST=" .env && sed -i "s|^DB_HOST=.*|DB_HOST=$DB_HOST|" .env || echo "DB_HOST=$DB_HOST" >> .env)
+[ ! -z "$DB_PORT" ] && (grep -q "^DB_PORT=" .env && sed -i "s|^DB_PORT=.*|DB_PORT=$DB_PORT|" .env || echo "DB_PORT=$DB_PORT" >> .env)
+[ ! -z "$DB_DATABASE" ] && (grep -q "^DB_DATABASE=" .env && sed -i "s|^DB_DATABASE=.*|DB_DATABASE=$DB_DATABASE|" .env || echo "DB_DATABASE=$DB_DATABASE" >> .env)
+[ ! -z "$DB_USERNAME" ] && (grep -q "^DB_USERNAME=" .env && sed -i "s|^DB_USERNAME=.*|DB_USERNAME=$DB_USERNAME|" .env || echo "DB_USERNAME=$DB_USERNAME" >> .env)
+[ ! -z "$DB_PASSWORD" ] && (grep -q "^DB_PASSWORD=" .env && sed -i "s|^DB_PASSWORD=.*|DB_PASSWORD=$DB_PASSWORD|" .env || echo "DB_PASSWORD=$DB_PASSWORD" >> .env)
+
 # Read APP_KEY from .env file if it exists and is valid
 if [ -f .env ] && grep -q "^APP_KEY=base64:" .env; then
     APP_KEY_FROM_FILE=$(grep "^APP_KEY=" .env | cut -d '=' -f2- | tr -d '"' | tr -d "'")
@@ -67,5 +82,13 @@ php artisan l5-swagger:generate || true
 # Run migrations (optional - uncomment if you want auto-migrations)
 # php artisan migrate --force || true
 
-# Start the application with APP_KEY in environment
-exec env APP_KEY="$APP_KEY" php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
+# Start the application with all necessary environment variables
+exec env \
+    APP_KEY="$APP_KEY" \
+    DB_CONNECTION="${DB_CONNECTION:-mysql}" \
+    DB_HOST="${DB_HOST:-127.0.0.1}" \
+    DB_PORT="${DB_PORT:-3306}" \
+    DB_DATABASE="${DB_DATABASE:-laravel}" \
+    DB_USERNAME="${DB_USERNAME:-root}" \
+    DB_PASSWORD="${DB_PASSWORD:-}" \
+    php artisan serve --host=0.0.0.0 --port=${PORT:-8000}

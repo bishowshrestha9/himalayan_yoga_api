@@ -12,6 +12,30 @@ services:
         value: false
       - key: APP_KEY
         generateValue: true
+      # Database Configuration - Set these in Render Dashboard or use fromDatabase for managed DB
+      - key: DB_CONNECTION
+        value: mysql
+      # For Render managed database, use fromDatabase (create DB service first):
+      # - key: DB_HOST
+      #   fromDatabase:
+      #     name: himalayan-yoga-db
+      #     property: host
+      # - key: DB_DATABASE
+      #   fromDatabase:
+      #     name: himalayan-yoga-db
+      #     property: database
+      # - key: DB_USERNAME
+      #   fromDatabase:
+      #     name: himalayan-yoga-db
+      #     property: user
+      # - key: DB_PASSWORD
+      #   fromDatabase:
+      #     name: himalayan-yoga-db
+      #     property: password
+      # For external MySQL, set DB_HOST, DB_DATABASE, DB_USERNAME, DB_PASSWORD in Render Dashboard
+      - key: DB_PORT
+        value: 3306
+      # Swagger Configuration
       - key: L5_SWAGGER_USE_ABSOLUTE_PATH
         value: true
       - key: L5_SWAGGER_UI_ASSETS_PATH
