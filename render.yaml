@@ -34,5 +34,6 @@ services:
         value: json
       - key: L5_SWAGGER_DOCUMENTATIONS_DEFAULT_API_TITLE
         value: Himalayan Yoga API
-      # Optional: Set APP_URL in Render Dashboard if you need absolute URLs elsewhere
+      # APP_URL will be auto-detected from RENDER_EXTERNAL_URL and converted to HTTPS
+      # If you need to override, set APP_URL in Render Dashboard:
       # APP_URL = https://himalayan-yogini-api.onrender.com

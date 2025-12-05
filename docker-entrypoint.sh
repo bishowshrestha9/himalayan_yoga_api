@@ -12,15 +12,25 @@ if [ ! -f .env ]; then
         # Try to detect APP_URL from Render environment variables
         if [ -z "$APP_URL" ]; then
             if [ ! -z "$RENDER_EXTERNAL_URL" ]; then
-                echo "APP_URL=$RENDER_EXTERNAL_URL" >> .env
-                echo "Detected Render URL: $RENDER_EXTERNAL_URL"
+                # Ensure HTTPS is used for Render URLs
+                RENDER_URL="$RENDER_EXTERNAL_URL"
+                if [[ "$RENDER_URL" =~ ^http:// ]]; then
+                    RENDER_URL="${RENDER_URL/http:\/\//https:\/\/}"
+                fi
+                echo "APP_URL=$RENDER_URL" >> .env
+                echo "Detected Render URL: $RENDER_URL"
             else
                 echo "APP_URL=http://localhost" >> .env
                 echo "WARNING: APP_URL not set. Using localhost. Set APP_URL in Render Dashboard for production."
             fi
         else
-            echo "APP_URL=$APP_URL" >> .env
-            echo "Using provided APP_URL: $APP_URL"
+            # Ensure provided APP_URL uses HTTPS if it's a Render URL
+            FINAL_APP_URL="$APP_URL"
+            if [[ "$FINAL_APP_URL" =~ onrender\.com ]] && [[ "$FINAL_APP_URL" =~ ^http:// ]]; then
+                FINAL_APP_URL="${FINAL_APP_URL/http:\/\//https:\/\/}"
+            fi
+            echo "APP_URL=$FINAL_APP_URL" >> .env
+            echo "Using provided APP_URL: $FINAL_APP_URL"
         fi
     fi
 fi
@@ -48,20 +58,31 @@ fi
 [ ! -z "$DB_PASSWORD" ] && (grep -q "^DB_PASSWORD=" .env && sed -i "s|^DB_PASSWORD=.*|DB_PASSWORD=$DB_PASSWORD|" .env || echo "DB_PASSWORD=$DB_PASSWORD" >> .env)
 
 # Ensure APP_URL is set correctly (update if already exists)
+# This section handles cases where .env already exists
 if [ ! -z "$APP_URL" ]; then
-    if grep -q "^APP_URL=" .env; then
-        sed -i "s|^APP_URL=.*|APP_URL=$APP_URL|" .env
-    else
-        echo "APP_URL=$APP_URL" >> .env
+    # Ensure provided APP_URL uses HTTPS if it's a Render URL
+    FINAL_APP_URL="$APP_URL"
+    if [[ "$FINAL_APP_URL" =~ onrender\.com ]] && [[ "$FINAL_APP_URL" =~ ^http:// ]]; then
+        FINAL_APP_URL="${FINAL_APP_URL/http:\/\//https:\/\/}"
     fi
-    echo "APP_URL set to: $APP_URL"
+    if grep -q "^APP_URL=" .env; then
+        sed -i "s|^APP_URL=.*|APP_URL=$FINAL_APP_URL|" .env
+    else
+        echo "APP_URL=$FINAL_APP_URL" >> .env
+    fi
+    echo "APP_URL set to: $FINAL_APP_URL"
 elif [ ! -z "$RENDER_EXTERNAL_URL" ]; then
-    if grep -q "^APP_URL=" .env; then
-        sed -i "s|^APP_URL=.*|APP_URL=$RENDER_EXTERNAL_URL|" .env
-    else
-        echo "APP_URL=$RENDER_EXTERNAL_URL" >> .env
+    # Ensure HTTPS is used for Render URLs
+    RENDER_URL="$RENDER_EXTERNAL_URL"
+    if [[ "$RENDER_URL" =~ ^http:// ]]; then
+        RENDER_URL="${RENDER_URL/http:\/\//https:\/\/}"
     fi
-    echo "APP_URL auto-detected from Render: $RENDER_EXTERNAL_URL"
+    if grep -q "^APP_URL=" .env; then
+        sed -i "s|^APP_URL=.*|APP_URL=$RENDER_URL|" .env
+    else
+        echo "APP_URL=$RENDER_URL" >> .env
+    fi
+    echo "APP_URL auto-detected from Render: $RENDER_URL"
 fi
 
 # Read APP_KEY from .env file if it exists and is valid
@@ -143,7 +164,18 @@ php artisan l5-swagger:generate || true
 
 # Export all environment variables for php artisan serve
 export APP_KEY="$APP_KEY"
-export APP_URL="${APP_URL:-${RENDER_EXTERNAL_URL:-http://localhost}}"
+# Get APP_URL from .env file (which should have HTTPS)
+APP_URL_FROM_ENV=$(grep "^APP_URL=" .env 2>/dev/null | cut -d '=' -f2- | tr -d '"' | tr -d "'" || echo "")
+if [ ! -z "$APP_URL_FROM_ENV" ]; then
+    export APP_URL="$APP_URL_FROM_ENV"
+else
+    # Fallback: use RENDER_EXTERNAL_URL with HTTPS
+    RENDER_URL="${RENDER_EXTERNAL_URL:-http://localhost}"
+    if [[ "$RENDER_URL" =~ ^http:// ]] && [[ "$RENDER_URL" =~ onrender\.com ]]; then
+        RENDER_URL="${RENDER_URL/http:\/\//https:\/\/}"
+    fi
+    export APP_URL="$RENDER_URL"
+fi
 export SESSION_DRIVER="${SESSION_DRIVER:-array}"
 export DB_CONNECTION="${DB_CONNECTION:-mysql}"
 export DB_HOST="$DB_HOST_FINAL"
