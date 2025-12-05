@@ -58,10 +58,26 @@ RUN echo 'server { \
     root /var/www/html/public; \
     index index.php index.html; \
     \
+    # Route Swagger asset requests directly through Laravel (don't check for static files) \
+    location ~ ^/docs/asset/ { \
+        fastcgi_pass 127.0.0.1:9000; \
+        fastcgi_index index.php; \
+        fastcgi_param SCRIPT_FILENAME $document_root/index.php; \
+        fastcgi_param REQUEST_URI $request_uri; \
+        include fastcgi_params; \
+    } \
+    \
+    # Route API documentation through Laravel \
+    location ~ ^/api/documentation { \
+        try_files $uri /index.php?$query_string; \
+    } \
+    \
+    # Serve static files if they exist, otherwise route to Laravel \
     location / { \
         try_files $uri $uri/ /index.php?$query_string; \
     } \
     \
+    # PHP handler \
     location ~ \.php$ { \
         fastcgi_pass 127.0.0.1:9000; \
         fastcgi_index index.php; \
@@ -69,6 +85,7 @@ RUN echo 'server { \
         include fastcgi_params; \
     } \
     \
+    # Deny access to hidden files \
     location ~ /\.(?!well-known).* { \
         deny all; \
     } \
