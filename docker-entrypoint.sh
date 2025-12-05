@@ -10,7 +10,6 @@ if [ ! -f .env ]; then
         echo "APP_ENV=${APP_ENV:-production}" >> .env
         echo "APP_DEBUG=${APP_DEBUG:-false}" >> .env
         # Try to detect APP_URL from Render environment variables
-        # Render provides RENDER_EXTERNAL_URL, or use APP_URL if set, otherwise use localhost for local dev
         if [ -z "$APP_URL" ]; then
             if [ ! -z "$RENDER_EXTERNAL_URL" ]; then
                 echo "APP_URL=$RENDER_EXTERNAL_URL" >> .env
@@ -124,16 +123,14 @@ echo "DB_PASSWORD: ${DB_PASSWORD_FINAL:0:3}***"
 if [ -z "$DB_HOST_FINAL" ] || [ "$DB_HOST_FINAL" = "127.0.0.1" ] || [ "$DB_HOST_FINAL" = "localhost" ]; then
     echo "WARNING: DB_HOST is set to localhost/127.0.0.1. This won't work on Render."
     echo "Please set DB_HOST, DB_DATABASE, DB_USERNAME, and DB_PASSWORD in Render Dashboard."
-    echo "Or configure a Render managed database using fromDatabase in render.yaml"
 fi
 
 if [ -z "$DB_DATABASE_FINAL" ] || [ "$DB_DATABASE_FINAL" = "laravel" ]; then
     echo "WARNING: DB_DATABASE is not set or using default. Please configure your database."
 fi
 
-# Clear and cache configuration (these commands need APP_KEY)
-# Use --env to ensure environment variables are used
-php artisan config:clear --env=production || true
+# Clear and cache configuration
+php artisan config:clear || true
 php artisan route:clear || true
 php artisan view:clear || true
 
@@ -144,10 +141,9 @@ php artisan db:show --database=mysql 2>&1 || echo "Database connection test fail
 # Generate Swagger documentation
 php artisan l5-swagger:generate || true
 
-# Run migrations (optional - uncomment if you want auto-migrations)
-# php artisan migrate --force || true
-
-# Export database variables for use in exec (use final values)
+# Export all environment variables for php artisan serve
+export APP_KEY="$APP_KEY"
+export SESSION_DRIVER="${SESSION_DRIVER:-array}"
 export DB_CONNECTION="${DB_CONNECTION:-mysql}"
 export DB_HOST="$DB_HOST_FINAL"
 export DB_PORT="${DB_PORT:-3306}"
@@ -155,39 +151,6 @@ export DB_DATABASE="$DB_DATABASE_FINAL"
 export DB_USERNAME="$DB_USERNAME_FINAL"
 export DB_PASSWORD="$DB_PASSWORD_FINAL"
 
-# Export session driver
-export SESSION_DRIVER="${SESSION_DRIVER:-array}"
-
-# Update nginx config with dynamic port
-sed -i "s/listen 8000;/listen ${PORT:-8000};/g" /etc/nginx/sites-available/default
-
-# Configure PHP-FPM to pass environment variables
-# Create a custom PHP-FPM pool config that allows environment variables
-cat > /usr/local/etc/php-fpm.d/www.conf <<EOF
-[www]
-user = www-data
-group = www-data
-listen = 127.0.0.1:9000
-pm = dynamic
-pm.max_children = 5
-pm.start_servers = 2
-pm.min_spare_servers = 1
-pm.max_spare_servers = 3
-clear_env = no
-EOF
-
-# Export all necessary environment variables (they'll be available to PHP-FPM)
-export APP_KEY="$APP_KEY"
-export SESSION_DRIVER="$SESSION_DRIVER"
-export DB_CONNECTION="$DB_CONNECTION"
-export DB_HOST="$DB_HOST"
-export DB_PORT="$DB_PORT"
-export DB_DATABASE="$DB_DATABASE"
-export DB_USERNAME="$DB_USERNAME"
-export DB_PASSWORD="$DB_PASSWORD"
-
-# Start PHP-FPM in background
-php-fpm -D
-
-# Start nginx in foreground
-exec nginx -g 'daemon off;'
+# Start the application with php artisan serve
+echo "Starting Laravel application on port ${PORT:-8000}..."
+exec php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
