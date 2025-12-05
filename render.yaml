@@ -35,6 +35,9 @@ services:
       # For external MySQL, set DB_HOST, DB_DATABASE, DB_USERNAME, DB_PASSWORD in Render Dashboard
       - key: DB_PORT
         value: 3306
+      # Session Configuration (use array for API - no database required)
+      - key: SESSION_DRIVER
+        value: array
       # Swagger Configuration
       - key: L5_SWAGGER_USE_ABSOLUTE_PATH
         value: true

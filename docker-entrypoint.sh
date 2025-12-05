@@ -20,6 +20,13 @@ elif ! grep -q "^DB_CONNECTION=mysql" .env; then
     sed -i "s|^DB_CONNECTION=.*|DB_CONNECTION=mysql|" .env
 fi
 
+# Set session driver to array for API (doesn't require database)
+if ! grep -q "^SESSION_DRIVER=" .env 2>/dev/null; then
+    echo "SESSION_DRIVER=array" >> .env
+elif ! grep -q "^SESSION_DRIVER=array" .env; then
+    sed -i "s|^SESSION_DRIVER=.*|SESSION_DRIVER=array|" .env
+fi
+
 # Set database environment variables if provided
 [ ! -z "$DB_CONNECTION" ] && (grep -q "^DB_CONNECTION=" .env && sed -i "s|^DB_CONNECTION=.*|DB_CONNECTION=$DB_CONNECTION|" .env || echo "DB_CONNECTION=$DB_CONNECTION" >> .env)
 [ ! -z "$DB_HOST" ] && (grep -q "^DB_HOST=" .env && sed -i "s|^DB_HOST=.*|DB_HOST=$DB_HOST|" .env || echo "DB_HOST=$DB_HOST" >> .env)
@@ -118,9 +125,13 @@ export DB_DATABASE="$DB_DATABASE_FINAL"
 export DB_USERNAME="$DB_USERNAME_FINAL"
 export DB_PASSWORD="$DB_PASSWORD_FINAL"
 
+# Export session driver
+export SESSION_DRIVER="${SESSION_DRIVER:-array}"
+
 # Start the application with all necessary environment variables
 exec env \
     APP_KEY="$APP_KEY" \
+    SESSION_DRIVER="$SESSION_DRIVER" \
     DB_CONNECTION="$DB_CONNECTION" \
     DB_HOST="$DB_HOST_FINAL" \
     DB_PORT="$DB_PORT" \
