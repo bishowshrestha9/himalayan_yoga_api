@@ -13,8 +13,6 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     zip \
     unzip \
-    nodejs \
-    npm \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
@@ -29,29 +27,13 @@ COPY composer.json composer.lock ./
 # Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
-# Copy all application files (needed for vite build)
+# Copy all application files
 COPY . .
-
-# Install Node dependencies and build assets
-# Create build directory first to ensure it exists
-RUN mkdir -p /var/www/html/public/build/assets || true
-
-# Install and build
-RUN if [ -f "package.json" ]; then \
-        echo "Installing npm dependencies..." && \
-        npm install --legacy-peer-deps 2>&1 | head -20 || echo "npm install had warnings"; \
-        echo "Building assets..." && \
-        npm run build 2>&1 || echo "Build failed - assets may not be available"; \
-        ls -la /var/www/html/public/build/ 2>/dev/null || echo "Build directory not created"; \
-    else \
-        echo "No package.json found, skipping frontend build"; \
-    fi
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html/storage \
-    && chmod -R 755 /var/www/html/bootstrap/cache \
-    && chmod -R 755 /var/www/html/public/build 2>/dev/null || true
+    && chmod -R 755 /var/www/html/bootstrap/cache
 
 # Run post-install scripts
 RUN composer dump-autoload --optimize || true
