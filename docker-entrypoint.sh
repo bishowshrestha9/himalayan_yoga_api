@@ -158,14 +158,36 @@ export DB_PASSWORD="$DB_PASSWORD_FINAL"
 # Export session driver
 export SESSION_DRIVER="${SESSION_DRIVER:-array}"
 
-# Start the application with all necessary environment variables
-exec env \
-    APP_KEY="$APP_KEY" \
-    SESSION_DRIVER="$SESSION_DRIVER" \
-    DB_CONNECTION="$DB_CONNECTION" \
-    DB_HOST="$DB_HOST_FINAL" \
-    DB_PORT="$DB_PORT" \
-    DB_DATABASE="$DB_DATABASE_FINAL" \
-    DB_USERNAME="$DB_USERNAME_FINAL" \
-    DB_PASSWORD="$DB_PASSWORD_FINAL" \
-    php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
+# Update nginx config with dynamic port
+sed -i "s/listen 8000;/listen ${PORT:-8000};/g" /etc/nginx/sites-available/default
+
+# Configure PHP-FPM to pass environment variables
+# Create a custom PHP-FPM pool config that allows environment variables
+cat > /usr/local/etc/php-fpm.d/www.conf <<EOF
+[www]
+user = www-data
+group = www-data
+listen = 127.0.0.1:9000
+pm = dynamic
+pm.max_children = 5
+pm.start_servers = 2
+pm.min_spare_servers = 1
+pm.max_spare_servers = 3
+clear_env = no
+EOF
+
+# Export all necessary environment variables (they'll be available to PHP-FPM)
+export APP_KEY="$APP_KEY"
+export SESSION_DRIVER="$SESSION_DRIVER"
+export DB_CONNECTION="$DB_CONNECTION"
+export DB_HOST="$DB_HOST"
+export DB_PORT="$DB_PORT"
+export DB_DATABASE="$DB_DATABASE"
+export DB_USERNAME="$DB_USERNAME"
+export DB_PASSWORD="$DB_PASSWORD"
+
+# Start PHP-FPM in background
+php-fpm -D
+
+# Start nginx in foreground
+exec nginx -g 'daemon off;'

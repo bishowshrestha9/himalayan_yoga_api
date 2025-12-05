@@ -1,10 +1,10 @@
-# Try PHP 8.4, fallback to 8.4-rc if stable not available
-FROM php:8.4-cli
+# Use PHP-FPM for better static file serving
+FROM php:8.4-fpm
 
 # Set working directory
 WORKDIR /var/www/html
 
-# Install system dependencies
+# Install system dependencies including nginx
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y \
     unzip \
     nodejs \
     npm \
+    nginx \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
@@ -49,6 +50,29 @@ RUN chown -R www-data:www-data /var/www/html \
 
 # Run post-install scripts
 RUN composer dump-autoload --optimize || true
+
+# Configure nginx
+RUN echo 'server { \
+    listen 8000; \
+    server_name _; \
+    root /var/www/html/public; \
+    index index.php index.html; \
+    \
+    location / { \
+        try_files $uri $uri/ /index.php?$query_string; \
+    } \
+    \
+    location ~ \.php$ { \
+        fastcgi_pass 127.0.0.1:9000; \
+        fastcgi_index index.php; \
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name; \
+        include fastcgi_params; \
+    } \
+    \
+    location ~ /\.(?!well-known).* { \
+        deny all; \
+    } \
+}' > /etc/nginx/sites-available/default
 
 # Copy entrypoint script
 COPY docker-entrypoint.sh /usr/local/bin/
