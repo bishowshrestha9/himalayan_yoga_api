@@ -1,18 +1,10 @@
 services:
   - type: web
     name: himalayan-yogini-api
-    runtime: php
+    runtime: docker
     plan: free
-    buildCommand: |
-      composer install --no-dev --optimize-autoloader
-      php artisan config:clear
-      php artisan route:clear
-      php artisan l5-swagger:generate
-    startCommand: |
-      php artisan serve --host 0.0.0.0 --port $PORT
-      php artisan queue:listen --tries=1
-      php artisan pail --timeout=0
-      npm run dev
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
     envVars:
       - key: APP_ENV
         value: production
