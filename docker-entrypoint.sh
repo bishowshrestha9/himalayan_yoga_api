@@ -9,7 +9,20 @@ if [ ! -f .env ]; then
         echo "APP_NAME=Laravel" > .env
         echo "APP_ENV=${APP_ENV:-production}" >> .env
         echo "APP_DEBUG=${APP_DEBUG:-false}" >> .env
-        echo "APP_URL=${APP_URL:-http://localhost}" >> .env
+        # Try to detect APP_URL from Render environment variables
+        # Render provides RENDER_EXTERNAL_URL, or use APP_URL if set, otherwise use localhost for local dev
+        if [ -z "$APP_URL" ]; then
+            if [ ! -z "$RENDER_EXTERNAL_URL" ]; then
+                echo "APP_URL=$RENDER_EXTERNAL_URL" >> .env
+                echo "Detected Render URL: $RENDER_EXTERNAL_URL"
+            else
+                echo "APP_URL=http://localhost" >> .env
+                echo "WARNING: APP_URL not set. Using localhost. Set APP_URL in Render Dashboard for production."
+            fi
+        else
+            echo "APP_URL=$APP_URL" >> .env
+            echo "Using provided APP_URL: $APP_URL"
+        fi
     fi
 fi
 
@@ -34,6 +47,23 @@ fi
 [ ! -z "$DB_DATABASE" ] && (grep -q "^DB_DATABASE=" .env && sed -i "s|^DB_DATABASE=.*|DB_DATABASE=$DB_DATABASE|" .env || echo "DB_DATABASE=$DB_DATABASE" >> .env)
 [ ! -z "$DB_USERNAME" ] && (grep -q "^DB_USERNAME=" .env && sed -i "s|^DB_USERNAME=.*|DB_USERNAME=$DB_USERNAME|" .env || echo "DB_USERNAME=$DB_USERNAME" >> .env)
 [ ! -z "$DB_PASSWORD" ] && (grep -q "^DB_PASSWORD=" .env && sed -i "s|^DB_PASSWORD=.*|DB_PASSWORD=$DB_PASSWORD|" .env || echo "DB_PASSWORD=$DB_PASSWORD" >> .env)
+
+# Ensure APP_URL is set correctly (update if already exists)
+if [ ! -z "$APP_URL" ]; then
+    if grep -q "^APP_URL=" .env; then
+        sed -i "s|^APP_URL=.*|APP_URL=$APP_URL|" .env
+    else
+        echo "APP_URL=$APP_URL" >> .env
+    fi
+    echo "APP_URL set to: $APP_URL"
+elif [ ! -z "$RENDER_EXTERNAL_URL" ]; then
+    if grep -q "^APP_URL=" .env; then
+        sed -i "s|^APP_URL=.*|APP_URL=$RENDER_EXTERNAL_URL|" .env
+    else
+        echo "APP_URL=$RENDER_EXTERNAL_URL" >> .env
+    fi
+    echo "APP_URL auto-detected from Render: $RENDER_EXTERNAL_URL"
+fi
 
 # Read APP_KEY from .env file if it exists and is valid
 if [ -f .env ] && grep -q "^APP_KEY=base64:" .env; then

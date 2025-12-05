@@ -39,12 +39,11 @@ services:
       - key: SESSION_DRIVER
         value: array
       # Swagger Configuration
+      # Note: Set APP_URL in Render Dashboard to your service URL (e.g., https://himalayan-yogini-api.onrender.com)
       - key: L5_SWAGGER_USE_ABSOLUTE_PATH
         value: true
       - key: L5_SWAGGER_UI_ASSETS_PATH
         value: vendor/swagger-api/swagger-ui/dist/
-      - key: L5_SWAGGER_BASE_PATH
-        value: /api
       - key: L5_SWAGGER_GENERATE_ALWAYS
         value: false
       - key: L5_FORMAT_TO_USE_FOR_DOCS
