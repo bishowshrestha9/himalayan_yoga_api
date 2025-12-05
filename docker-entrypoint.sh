@@ -184,11 +184,24 @@ else
     fi
 fi
 
-# Clear and cache configuration (AFTER ensuring APP_URL is HTTPS)
+# Export APP_URL to environment BEFORE clearing config (so Laravel uses it)
+FINAL_APP_URL=$(grep "^APP_URL=" .env 2>/dev/null | cut -d '=' -f2- | tr -d '"' | tr -d "'" || echo "")
+if [ ! -z "$FINAL_APP_URL" ]; then
+    # Ensure it's HTTPS for Render
+    if [[ "$FINAL_APP_URL" =~ onrender\.com ]] && [[ "$FINAL_APP_URL" =~ ^http:// ]]; then
+        FINAL_APP_URL="${FINAL_APP_URL/http:\/\//https:\/\/}"
+        sed -i "s|^APP_URL=.*|APP_URL=$FINAL_APP_URL|" .env
+    fi
+    export APP_URL="$FINAL_APP_URL"
+    echo "Exported APP_URL for Laravel: $APP_URL"
+fi
+
+# Clear and cache configuration (AFTER ensuring APP_URL is HTTPS and exported)
 echo "Clearing Laravel caches..."
 php artisan config:clear || true
 php artisan route:clear || true
 php artisan view:clear || true
+php artisan cache:clear || true
 
 # Test database connection (optional - will show error if can't connect)
 echo "Testing database connection..."
@@ -205,30 +218,24 @@ else
     echo "ERROR: Swagger vendor assets not found in vendor/swagger-api/swagger-ui/dist"
 fi
 
-# Generate Swagger documentation (this will use APP_URL from .env)
+# Generate Swagger documentation (APP_URL is now exported and .env is correct)
+echo "Generating Swagger documentation with APP_URL=$APP_URL..."
 php artisan l5-swagger:generate || true
 
 # Export all environment variables for php artisan serve
 export APP_KEY="$APP_KEY"
 
-# Get APP_URL from .env file (which should have HTTPS after our checks above)
-APP_URL_FROM_ENV=$(grep "^APP_URL=" .env 2>/dev/null | cut -d '=' -f2- | tr -d '"' | tr -d "'" || echo "")
-if [ ! -z "$APP_URL_FROM_ENV" ]; then
-    # Final safety check: ensure it's HTTPS for Render
-    if [[ "$APP_URL_FROM_ENV" =~ onrender\.com ]] && [[ "$APP_URL_FROM_ENV" =~ ^http:// ]]; then
-        APP_URL_FROM_ENV="${APP_URL_FROM_ENV/http:\/\//https:\/\/}"
-        echo "WARNING: Converting exported APP_URL to HTTPS: $APP_URL_FROM_ENV"
-    fi
-    export APP_URL="$APP_URL_FROM_ENV"
-    echo "Exported APP_URL: $APP_URL"
-else
+# APP_URL is already exported above, just ensure it's still set correctly
+if [ -z "$APP_URL" ]; then
     # Fallback: use RENDER_EXTERNAL_URL with HTTPS
     RENDER_URL="${RENDER_EXTERNAL_URL:-http://localhost}"
     if [[ "$RENDER_URL" =~ ^http:// ]] && [[ "$RENDER_URL" =~ onrender\.com ]]; then
         RENDER_URL="${RENDER_URL/http:\/\//https:\/\/}"
     fi
     export APP_URL="$RENDER_URL"
-    echo "Exported APP_URL (from RENDER_EXTERNAL_URL): $APP_URL"
+    echo "Exported APP_URL (fallback): $APP_URL"
+else
+    echo "APP_URL already exported: $APP_URL"
 fi
 export SESSION_DRIVER="${SESSION_DRIVER:-array}"
 export DB_CONNECTION="${DB_CONNECTION:-mysql}"
