@@ -12,29 +12,30 @@ services:
         value: false
       - key: APP_KEY
         generateValue: true
-      # Database Configuration - Set these in Render Dashboard or use fromDatabase for managed DB
+      # Database Configuration
       - key: DB_CONNECTION
         value: mysql
-      # For Render managed database, use fromDatabase (create DB service first):
-      # - key: DB_HOST
-      #   fromDatabase:
-      #     name: himalayan-yoga-db
-      #     property: host
-      # - key: DB_DATABASE
-      #   fromDatabase:
-      #     name: himalayan-yoga-db
-      #     property: database
-      # - key: DB_USERNAME
-      #   fromDatabase:
-      #     name: himalayan-yoga-db
-      #     property: user
-      # - key: DB_PASSWORD
-      #   fromDatabase:
-      #     name: himalayan-yoga-db
-      #     property: password
-      # For external MySQL, set DB_HOST, DB_DATABASE, DB_USERNAME, DB_PASSWORD in Render Dashboard
+      # For Render managed database, uncomment and update the database service name:
+      - key: DB_HOST
+        fromDatabase:
+          name: himalayan-yoga-db  # Change this to your actual database service name
+          property: host
+      - key: DB_DATABASE
+        fromDatabase:
+          name: himalayan-yoga-db  # Change this to your actual database service name
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: himalayan-yoga-db  # Change this to your actual database service name
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: himalayan-yoga-db  # Change this to your actual database service name
+          property: password
       - key: DB_PORT
         value: 3306
+      # Alternative: For external MySQL, comment out fromDatabase above and set these in Render Dashboard:
+      # DB_HOST, DB_DATABASE, DB_USERNAME, DB_PASSWORD
       # Session Configuration (use array for API - no database required)
       - key: SESSION_DRIVER
         value: array
