@@ -17,8 +17,7 @@ services:
       # DB_HOST, DB_DATABASE, DB_USERNAME, DB_PASSWORD
       - key: DB_CONNECTION
         value: mysql
-      - key: DB_PORT
-        value: 3306
+
       # Session Configuration (use array for API - no database required)
       - key: SESSION_DRIVER
         value: array

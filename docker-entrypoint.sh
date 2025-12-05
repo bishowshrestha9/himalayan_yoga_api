@@ -150,7 +150,42 @@ if [ -z "$DB_DATABASE_FINAL" ] || [ "$DB_DATABASE_FINAL" = "laravel" ]; then
     echo "WARNING: DB_DATABASE is not set or using default. Please configure your database."
 fi
 
-# Clear and cache configuration
+# Final check: Ensure APP_URL in .env uses HTTPS for Render (BEFORE clearing config cache)
+echo "Ensuring APP_URL uses HTTPS..."
+if grep -q "^APP_URL=" .env 2>/dev/null; then
+    CURRENT_APP_URL=$(grep "^APP_URL=" .env | cut -d '=' -f2- | tr -d '"' | tr -d "'")
+    if [[ "$CURRENT_APP_URL" =~ onrender\.com ]] && [[ "$CURRENT_APP_URL" =~ ^http:// ]]; then
+        HTTPS_URL="${CURRENT_APP_URL/http:\/\//https:\/\/}"
+        sed -i "s|^APP_URL=.*|APP_URL=$HTTPS_URL|" .env
+        echo "✓ Updated APP_URL to HTTPS: $HTTPS_URL"
+    elif [[ "$CURRENT_APP_URL" =~ ^https:// ]]; then
+        echo "✓ APP_URL already uses HTTPS: $CURRENT_APP_URL"
+    fi
+else
+    # If APP_URL is not set, use RENDER_EXTERNAL_URL with HTTPS
+    if [ ! -z "$RENDER_EXTERNAL_URL" ]; then
+        RENDER_URL="$RENDER_EXTERNAL_URL"
+        if [[ "$RENDER_URL" =~ ^http:// ]]; then
+            RENDER_URL="${RENDER_URL/http:\/\//https:\/\/}"
+        fi
+        echo "APP_URL=$RENDER_URL" >> .env
+        echo "✓ Set APP_URL to HTTPS: $RENDER_URL"
+    fi
+fi
+
+# Verify APP_URL is set correctly
+FINAL_APP_URL=$(grep "^APP_URL=" .env 2>/dev/null | cut -d '=' -f2- | tr -d '"' | tr -d "'" || echo "")
+if [ -z "$FINAL_APP_URL" ]; then
+    echo "WARNING: APP_URL is not set in .env file"
+else
+    echo "Final APP_URL in .env: $FINAL_APP_URL"
+    if [[ ! "$FINAL_APP_URL" =~ ^https:// ]] && [[ "$FINAL_APP_URL" =~ onrender\.com ]]; then
+        echo "ERROR: APP_URL should use HTTPS for Render but it doesn't!"
+    fi
+fi
+
+# Clear and cache configuration (AFTER ensuring APP_URL is HTTPS)
+echo "Clearing Laravel caches..."
 php artisan config:clear || true
 php artisan route:clear || true
 php artisan view:clear || true
@@ -170,15 +205,22 @@ else
     echo "ERROR: Swagger vendor assets not found in vendor/swagger-api/swagger-ui/dist"
 fi
 
-# Generate Swagger documentation
+# Generate Swagger documentation (this will use APP_URL from .env)
 php artisan l5-swagger:generate || true
 
 # Export all environment variables for php artisan serve
 export APP_KEY="$APP_KEY"
-# Get APP_URL from .env file (which should have HTTPS)
+
+# Get APP_URL from .env file (which should have HTTPS after our checks above)
 APP_URL_FROM_ENV=$(grep "^APP_URL=" .env 2>/dev/null | cut -d '=' -f2- | tr -d '"' | tr -d "'" || echo "")
 if [ ! -z "$APP_URL_FROM_ENV" ]; then
+    # Final safety check: ensure it's HTTPS for Render
+    if [[ "$APP_URL_FROM_ENV" =~ onrender\.com ]] && [[ "$APP_URL_FROM_ENV" =~ ^http:// ]]; then
+        APP_URL_FROM_ENV="${APP_URL_FROM_ENV/http:\/\//https:\/\/}"
+        echo "WARNING: Converting exported APP_URL to HTTPS: $APP_URL_FROM_ENV"
+    fi
     export APP_URL="$APP_URL_FROM_ENV"
+    echo "Exported APP_URL: $APP_URL"
 else
     # Fallback: use RENDER_EXTERNAL_URL with HTTPS
     RENDER_URL="${RENDER_EXTERNAL_URL:-http://localhost}"
@@ -186,6 +228,7 @@ else
         RENDER_URL="${RENDER_URL/http:\/\//https:\/\/}"
     fi
     export APP_URL="$RENDER_URL"
+    echo "Exported APP_URL (from RENDER_EXTERNAL_URL): $APP_URL"
 fi
 export SESSION_DRIVER="${SESSION_DRIVER:-array}"
 export DB_CONNECTION="${DB_CONNECTION:-mysql}"
