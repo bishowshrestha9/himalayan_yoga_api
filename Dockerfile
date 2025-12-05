@@ -38,7 +38,9 @@ RUN mkdir -p /var/www/html/public/docs/asset && \
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html/storage \
     && chmod -R 755 /var/www/html/bootstrap/cache \
-    && chmod -R 755 /var/www/html/public/docs 2>/dev/null || true
+    && chmod -R 755 /var/www/html/public/docs 2>/dev/null || true \
+    && mkdir -p /var/www/html/storage/api-docs \
+    && chmod -R 755 /var/www/html/storage/api-docs
 
 # Run post-install scripts
 RUN composer dump-autoload --optimize || true
