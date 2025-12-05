@@ -1,4 +1,5 @@
-FROM php:8.2-cli
+# Try PHP 8.4, fallback to 8.4-rc if stable not available
+FROM php:8.4-cli
 
 # Set working directory
 WORKDIR /var/www/html
