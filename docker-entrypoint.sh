@@ -225,12 +225,22 @@ chmod -R 755 storage/api-docs 2>/dev/null || true
 
 # Generate Swagger documentation (APP_URL is now exported and .env is correct)
 echo "Generating Swagger documentation with APP_URL=$APP_URL..."
-php artisan l5-swagger:generate || true
+# Force generation to ensure file exists
+php artisan l5-swagger:generate --force || php artisan l5-swagger:generate || true
 
 # Verify the documentation file was generated
 if [ -f "storage/api-docs/api-docs.json" ]; then
     echo "✓ Swagger documentation generated successfully"
     ls -lh storage/api-docs/api-docs.json
+    # Verify file is readable
+    if [ -r "storage/api-docs/api-docs.json" ]; then
+        echo "✓ File is readable"
+        # Show first few lines to verify it's valid JSON
+        head -3 storage/api-docs/api-docs.json || echo "Could not read file"
+    else
+        echo "WARNING: File exists but is not readable"
+        chmod 644 storage/api-docs/api-docs.json || true
+    fi
     # Test that the route is accessible
     echo "Testing docs route..."
     php artisan route:list --name=l5-swagger.default.docs | head -3 || echo "Route not found"
@@ -238,8 +248,15 @@ else
     echo "ERROR: Swagger documentation file not found at storage/api-docs/api-docs.json"
     echo "Listing storage/api-docs directory:"
     ls -la storage/api-docs/ 2>/dev/null || echo "Directory does not exist"
-    echo "Attempting to regenerate..."
-    php artisan l5-swagger:generate --force || true
+    echo "Attempting to regenerate with force..."
+    php artisan l5-swagger:generate --force || php artisan l5-swagger:generate || true
+    # Check again after regeneration
+    if [ -f "storage/api-docs/api-docs.json" ]; then
+        echo "✓ File generated after retry"
+        chmod 644 storage/api-docs/api-docs.json || true
+    else
+        echo "ERROR: File still not found after regeneration attempt"
+    fi
 fi
 
 # Export all environment variables for php artisan serve

@@ -28,7 +28,7 @@ services:
       - key: L5_SWAGGER_UI_ASSETS_PATH
         value: public/docs/asset/
       - key: L5_SWAGGER_GENERATE_ALWAYS
-        value: false
+        value: true
       - key: L5_FORMAT_TO_USE_FOR_DOCS
         value: json
       - key: L5_SWAGGER_DOCUMENTATIONS_DEFAULT_API_TITLE
