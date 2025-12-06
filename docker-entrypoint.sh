@@ -208,12 +208,13 @@ echo "Testing database connection..."
 php artisan db:show --database=mysql 2>&1 || echo "Database connection test failed - make sure credentials are correct"
 
 # Copy Swagger UI assets to public directory (required for serving)
+# Use /swagger-assets/ instead of /docs/asset/ to avoid conflict with /docs route
 echo "Copying Swagger UI assets to public directory..."
-mkdir -p public/docs/asset 2>/dev/null || true
+mkdir -p public/swagger-assets 2>/dev/null || true
 if [ -d "vendor/swagger-api/swagger-ui/dist" ]; then
-    cp -r vendor/swagger-api/swagger-ui/dist/* public/docs/asset/ 2>/dev/null || true
-    ls -la public/docs/asset/ | head -5 || echo "Assets directory is empty"
-    echo "Swagger assets copied to public/docs/asset/"
+    cp -r vendor/swagger-api/swagger-ui/dist/* public/swagger-assets/ 2>/dev/null || true
+    ls -la public/swagger-assets/ | head -5 || echo "Assets directory is empty"
+    echo "Swagger assets copied to public/swagger-assets/"
 else
     echo "ERROR: Swagger vendor assets not found in vendor/swagger-api/swagger-ui/dist"
 fi

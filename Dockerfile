@@ -31,14 +31,15 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction --no-script
 COPY . .
 
 # Copy Swagger UI assets to public directory for static serving
-RUN mkdir -p /var/www/html/public/docs/asset && \
-    cp -r /var/www/html/vendor/swagger-api/swagger-ui/dist/* /var/www/html/public/docs/asset/ 2>/dev/null || echo "Swagger assets not found in vendor, will be served via routes"
+# Use /swagger-assets/ instead of /docs/asset/ to avoid conflict with /docs route
+RUN mkdir -p /var/www/html/public/swagger-assets && \
+    cp -r /var/www/html/vendor/swagger-api/swagger-ui/dist/* /var/www/html/public/swagger-assets/ 2>/dev/null || echo "Swagger assets not found in vendor, will be served via routes"
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html/storage \
     && chmod -R 755 /var/www/html/bootstrap/cache \
-    && chmod -R 755 /var/www/html/public/docs 2>/dev/null || true \
+    && chmod -R 755 /var/www/html/public/swagger-assets 2>/dev/null || true \
     && mkdir -p /var/www/html/storage/api-docs \
     && chmod -R 755 /var/www/html/storage/api-docs
 
