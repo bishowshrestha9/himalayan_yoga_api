@@ -225,8 +225,8 @@ chmod -R 755 storage/api-docs 2>/dev/null || true
 
 # Generate Swagger documentation (APP_URL is now exported and .env is correct)
 echo "Generating Swagger documentation with APP_URL=$APP_URL..."
-# Force generation to ensure file exists
-php artisan l5-swagger:generate --force || php artisan l5-swagger:generate || true
+# Generate documentation (--force flag doesn't exist, just run normally)
+php artisan l5-swagger:generate || true
 
 # Verify the documentation file was generated
 if [ -f "storage/api-docs/api-docs.json" ]; then

@@ -126,7 +126,11 @@
         const urls = [];
 
         @foreach($urlsToDocs as $title => $url)
-            urls.push({name: "{{ $title }}", url: "{{ $url }}"});
+            @php
+                // Fix URL: remove query parameter if present (L5-Swagger bug)
+                $cleanUrl = preg_replace('/\?[^#]*/', '', $url);
+            @endphp
+            urls.push({name: "{{ $title }}", url: "{{ $cleanUrl }}"});
         @endforeach
 
         // Build a system
