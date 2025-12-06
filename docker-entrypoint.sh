@@ -231,10 +231,15 @@ php artisan l5-swagger:generate || true
 if [ -f "storage/api-docs/api-docs.json" ]; then
     echo "✓ Swagger documentation generated successfully"
     ls -lh storage/api-docs/api-docs.json
+    # Test that the route is accessible
+    echo "Testing docs route..."
+    php artisan route:list --name=l5-swagger.default.docs | head -3 || echo "Route not found"
 else
-    echo "WARNING: Swagger documentation file not found at storage/api-docs/api-docs.json"
+    echo "ERROR: Swagger documentation file not found at storage/api-docs/api-docs.json"
     echo "Listing storage/api-docs directory:"
     ls -la storage/api-docs/ 2>/dev/null || echo "Directory does not exist"
+    echo "Attempting to regenerate..."
+    php artisan l5-swagger:generate --force || true
 fi
 
 # Export all environment variables for php artisan serve
