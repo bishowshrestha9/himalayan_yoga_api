@@ -241,9 +241,15 @@ if [ -f "storage/api-docs/api-docs.json" ]; then
         echo "WARNING: File exists but is not readable"
         chmod 644 storage/api-docs/api-docs.json || true
     fi
-    # Test that the route is accessible
+    # Test that the route is accessible and file can be read
     echo "Testing docs route..."
     php artisan route:list --name=l5-swagger.default.docs | head -3 || echo "Route not found"
+    # Verify the file content is valid JSON
+    if php -r "json_decode(file_get_contents('storage/api-docs/api-docs.json')); echo 'Valid JSON';" 2>/dev/null; then
+        echo "✓ JSON file is valid"
+    else
+        echo "ERROR: JSON file is invalid or corrupted"
+    fi
 else
     echo "ERROR: Swagger documentation file not found at storage/api-docs/api-docs.json"
     echo "Listing storage/api-docs directory:"
