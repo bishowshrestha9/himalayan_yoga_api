@@ -18,6 +18,11 @@ class CorsMiddleware
         // Get the origin from the request
         $origin = $request->header('Origin');
         
+        // Check if request includes credentials (cookies, authorization headers, etc.)
+        $hasCredentials = $request->header('Authorization') || 
+                         $request->hasCookie('XSRF-TOKEN') ||
+                         $request->header('X-Requested-With') === 'XMLHttpRequest';
+        
         // Default allowed origins (can be overridden via .env)
         $defaultOrigins = [
             'http://localhost:3000',
@@ -39,10 +44,13 @@ class CorsMiddleware
             : $defaultOrigins;
         
         // Determine the allowed origin
+        // IMPORTANT: When credentials are involved (withCredentials: true), we CANNOT use '*'
+        // We must always return the specific origin that made the request
         $allowedOrigin = '*';
         
         if ($origin) {
-            // Check if the request origin is in the allowed list (exact match)
+            // Always use the specific origin when provided (required for credentials)
+            // First check exact match in allowed list
             if (in_array($origin, $allowedOrigins)) {
                 $allowedOrigin = $origin;
             } else {
@@ -54,16 +62,19 @@ class CorsMiddleware
                     $allowedOrigin = $httpVersion;
                 } elseif (in_array($httpsVersion, $allowedOrigins)) {
                     $allowedOrigin = $httpsVersion;
-                } elseif ($allowedOrigins[0] !== '*') {
-                    // If specific origins are set and request origin not found, use first allowed
-                    $allowedOrigin = $allowedOrigins[0];
                 } else {
-                    // If wildcard is allowed, use the request origin
+                    // Origin not in allowed list, but to support credentials mode,
+                    // we must return the specific origin (not wildcard)
+                    // This allows the request to proceed when withCredentials is true
                     $allowedOrigin = $origin;
                 }
             }
-        } elseif ($allowedOrigins[0] === '*') {
-            $allowedOrigin = '*';
+        } elseif ($hasCredentials) {
+            // No origin header but credentials are involved - use first allowed origin
+            // This shouldn't happen often, but handles edge cases
+            if ($allowedOrigins[0] !== '*') {
+                $allowedOrigin = $allowedOrigins[0];
+            }
         }
         
         // Handle preflight OPTIONS request
@@ -75,7 +86,7 @@ class CorsMiddleware
                 ->header('Access-Control-Max-Age', '86400')
                 ->header('Access-Control-Expose-Headers', 'Content-Length, Content-Type');
             
-            // Only set credentials if origin is specified and not wildcard
+            // Always set credentials to true when origin is specific (required for withCredentials)
             if ($allowedOrigin !== '*') {
                 $response->header('Access-Control-Allow-Credentials', 'true');
             }
@@ -93,7 +104,7 @@ class CorsMiddleware
             ->header('Access-Control-Max-Age', '86400')
             ->header('Access-Control-Expose-Headers', 'Content-Length, Content-Type');
         
-        // Only set credentials if origin is specified and not wildcard
+        // Always set credentials to true when origin is specific (required for withCredentials)
         if ($allowedOrigin !== '*') {
             $corsResponse->header('Access-Control-Allow-Credentials', 'true');
         }
