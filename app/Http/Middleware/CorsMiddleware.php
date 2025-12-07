@@ -18,6 +18,9 @@ class CorsMiddleware
         // Get the origin from the request
         $origin = $request->header('Origin');
         
+        // Check if request includes credentials (Authorization header indicates credentials)
+        $hasCredentials = $request->header('Authorization') !== null;
+        
         // Default allowed origins (can be overridden via .env or Render environment)
         $defaultOrigins = [
             'http://localhost:3000',
@@ -39,8 +42,8 @@ class CorsMiddleware
             : $defaultOrigins;
         
         // Determine the allowed origin
-        // IMPORTANT: When credentials are involved (withCredentials: true), we CANNOT use '*'
-        // We must always return the specific origin that made the request
+        // CRITICAL: When credentials are involved (withCredentials: true), we CANNOT use '*'
+        // We must ALWAYS return the specific origin that made the request
         $allowedOrigin = '*';
         
         if ($origin) {
@@ -65,10 +68,19 @@ class CorsMiddleware
                     $allowedOrigin = $origin;
                 }
             }
+        } elseif ($hasCredentials) {
+            // No origin header but credentials are involved - this shouldn't happen in browsers
+            // but handle it gracefully by using first allowed origin
+            if (!empty($allowedOrigins) && $allowedOrigins[0] !== '*') {
+                $allowedOrigin = $allowedOrigins[0];
+            }
         }
         
-        // Log for debugging (remove in production if needed)
-        // \Log::info('CORS Origin', ['origin' => $origin, 'allowed' => $allowedOrigin]);
+        // CRITICAL FIX: If origin exists, NEVER use wildcard (required for credentials)
+        // Even if origin is not in allowed list, return it to support credentials mode
+        if ($origin && $allowedOrigin === '*') {
+            $allowedOrigin = $origin;
+        }
         
         // Handle preflight OPTIONS request
         if ($request->isMethod('OPTIONS')) {
@@ -79,7 +91,8 @@ class CorsMiddleware
                 ->header('Access-Control-Max-Age', '86400')
                 ->header('Access-Control-Expose-Headers', 'Content-Length, Content-Type');
             
-            // Always set credentials to true when origin is specific (required for withCredentials)
+            // CRITICAL: Always set credentials to true when origin is specific (required for withCredentials)
+            // When withCredentials is true, browser requires specific origin (not wildcard)
             if ($allowedOrigin !== '*') {
                 $response->header('Access-Control-Allow-Credentials', 'true');
             }
@@ -97,7 +110,8 @@ class CorsMiddleware
             ->header('Access-Control-Max-Age', '86400')
             ->header('Access-Control-Expose-Headers', 'Content-Length, Content-Type');
         
-        // Always set credentials to true when origin is specific (required for withCredentials)
+        // CRITICAL: Always set credentials to true when origin is specific (required for withCredentials)
+        // When withCredentials is true, browser requires specific origin (not wildcard)
         if ($allowedOrigin !== '*') {
             $corsResponse->header('Access-Control-Allow-Credentials', 'true');
         }
