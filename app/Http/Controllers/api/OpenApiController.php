@@ -19,7 +19,8 @@ use OpenApi\Attributes as OA;
     name: "Authorization",
     in: "header",
     scheme: "bearer",
-    bearerFormat: "JWT"
+    bearerFormat: "Token",
+    description: "Enter your Bearer token in the format: Bearer {token}"
 )]
 class OpenApiController
 {

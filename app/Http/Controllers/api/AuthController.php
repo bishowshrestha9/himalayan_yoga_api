@@ -8,10 +8,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use OpenApi\Attributes as OA;
 
-
-
 class AuthController extends Controller
 {
+    //update swagger documentation for login
     #[OA\Post(
         path: "/auth/login",
         summary: "User login",
@@ -51,38 +50,6 @@ class AuthController extends Controller
                     )
                 )
             ),
-            new OA\Response(
-                response: 401,
-                description: "Invalid login details",
-                content: new OA\MediaType(
-                    mediaType: "application/json",
-                    schema: new OA\Schema(
-                        properties: [
-                            new OA\Property(property: "message", type: "string", example: "Invalid login details")
-                        ]
-                    )
-                )
-            ),
-            new OA\Response(
-                response: 422,
-                description: "Validation error",
-                content: new OA\MediaType(
-                    mediaType: "application/json",
-                    schema: new OA\Schema(
-                        properties: [
-                            new OA\Property(property: "message", type: "string", example: "The email field is required."),
-                            new OA\Property(
-                                property: "errors",
-                                type: "object",
-                                additionalProperties: new OA\AdditionalProperties(
-                                    type: "array",
-                                    items: new OA\Items(type: "string")
-                                )
-                            )
-                        ]
-                    )
-                )
-            )
         ]
     )]
     public function login(Request $request)
@@ -101,7 +68,7 @@ class AuthController extends Controller
         
         $user = User::where('email', $request->email)->firstOrFail();
         $token = $user->createToken('auth_token')->plainTextToken;
-
+        
         return response()->json([
             'status' => true,   
             'message' => 'Login successful',
@@ -112,8 +79,8 @@ class AuthController extends Controller
         ], 200);
     }
 
-
-    #[OA\Post(
+//make logout get request
+    #[OA\Get(
         path: "/logout",
         summary: "User logout",
         tags: ["Authentication"],
