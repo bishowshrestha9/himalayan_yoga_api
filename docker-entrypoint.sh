@@ -128,11 +128,52 @@ fi
 echo "APP_KEY is set: ${APP_KEY:0:20}..."
 
 # Verify database credentials are set
+# IMPORTANT: Always prioritize environment variables from Render over .env file
 echo "Checking database configuration..."
-DB_HOST_FINAL="${DB_HOST:-$(grep '^DB_HOST=' .env 2>/dev/null | cut -d '=' -f2- || echo '127.0.0.1')}"
-DB_DATABASE_FINAL="${DB_DATABASE:-$(grep '^DB_DATABASE=' .env 2>/dev/null | cut -d '=' -f2- || echo 'laravel')}"
-DB_USERNAME_FINAL="${DB_USERNAME:-$(grep '^DB_USERNAME=' .env 2>/dev/null | cut -d '=' -f2- || echo 'root')}"
-DB_PASSWORD_FINAL="${DB_PASSWORD:-$(grep '^DB_PASSWORD=' .env 2>/dev/null | cut -d '=' -f2- || echo '')}"
+echo "Environment variables from Render:"
+echo "  DB_HOST=${DB_HOST:-not set}"
+echo "  DB_DATABASE=${DB_DATABASE:-not set}"
+echo "  DB_USERNAME=${DB_USERNAME:-not set}"
+echo "  DB_PASSWORD=${DB_PASSWORD:+***set***}"
+
+# Use environment variables first, fallback to .env only if env vars are not set
+if [ -z "$DB_HOST" ] && [ -f .env ]; then
+    DB_HOST_FROM_ENV=$(grep '^DB_HOST=' .env 2>/dev/null | cut -d '=' -f2- | tr -d '"' | tr -d "'" || echo '')
+    if [ ! -z "$DB_HOST_FROM_ENV" ]; then
+        DB_HOST="$DB_HOST_FROM_ENV"
+        echo "  Using DB_HOST from .env file: $DB_HOST"
+    fi
+fi
+
+if [ -z "$DB_DATABASE" ] && [ -f .env ]; then
+    DB_DATABASE_FROM_ENV=$(grep '^DB_DATABASE=' .env 2>/dev/null | cut -d '=' -f2- | tr -d '"' | tr -d "'" || echo '')
+    if [ ! -z "$DB_DATABASE_FROM_ENV" ]; then
+        DB_DATABASE="$DB_DATABASE_FROM_ENV"
+        echo "  Using DB_DATABASE from .env file: $DB_DATABASE"
+    fi
+fi
+
+if [ -z "$DB_USERNAME" ] && [ -f .env ]; then
+    DB_USERNAME_FROM_ENV=$(grep '^DB_USERNAME=' .env 2>/dev/null | cut -d '=' -f2- | tr -d '"' | tr -d "'" || echo '')
+    if [ ! -z "$DB_USERNAME_FROM_ENV" ]; then
+        DB_USERNAME="$DB_USERNAME_FROM_ENV"
+        echo "  Using DB_USERNAME from .env file: $DB_USERNAME"
+    fi
+fi
+
+if [ -z "$DB_PASSWORD" ] && [ -f .env ]; then
+    DB_PASSWORD_FROM_ENV=$(grep '^DB_PASSWORD=' .env 2>/dev/null | cut -d '=' -f2- | tr -d '"' | tr -d "'" || echo '')
+    if [ ! -z "$DB_PASSWORD_FROM_ENV" ]; then
+        DB_PASSWORD="$DB_PASSWORD_FROM_ENV"
+        echo "  Using DB_PASSWORD from .env file"
+    fi
+fi
+
+# Now set final values (prioritize environment variables)
+DB_HOST_FINAL="${DB_HOST:-127.0.0.1}"
+DB_DATABASE_FINAL="${DB_DATABASE:-laravel}"
+DB_USERNAME_FINAL="${DB_USERNAME:-root}"
+DB_PASSWORD_FINAL="${DB_PASSWORD:-}"
 
 echo "DB_CONNECTION: ${DB_CONNECTION:-mysql}"
 echo "DB_HOST: ${DB_HOST_FINAL}"
@@ -141,13 +182,27 @@ echo "DB_USERNAME: ${DB_USERNAME_FINAL}"
 echo "DB_PASSWORD: ${DB_PASSWORD_FINAL:0:3}***"
 
 # Check if database credentials are properly set
-if [ -z "$DB_HOST_FINAL" ] || [ "$DB_HOST_FINAL" = "127.0.0.1" ] || [ "$DB_HOST_FINAL" = "localhost" ]; then
-    echo "WARNING: DB_HOST is set to localhost/127.0.0.1. This won't work on Render."
-    echo "Please set DB_HOST, DB_DATABASE, DB_USERNAME, and DB_PASSWORD in Render Dashboard."
+if [ -z "$DB_HOST" ] || [ "$DB_HOST_FINAL" = "127.0.0.1" ] || [ "$DB_HOST_FINAL" = "localhost" ]; then
+    echo "ERROR: DB_HOST is not set in Render environment or is set to localhost/127.0.0.1."
+    echo "This won't work on Render. Please set DB_HOST in Render Dashboard → Environment."
+    echo "Current value: $DB_HOST_FINAL"
 fi
 
-if [ -z "$DB_DATABASE_FINAL" ] || [ "$DB_DATABASE_FINAL" = "laravel" ]; then
-    echo "WARNING: DB_DATABASE is not set or using default. Please configure your database."
+if [ -z "$DB_DATABASE" ] || [ "$DB_DATABASE_FINAL" = "laravel" ]; then
+    echo "ERROR: DB_DATABASE is not set in Render environment or is using default."
+    echo "Please set DB_DATABASE in Render Dashboard → Environment."
+    echo "Current value: $DB_DATABASE_FINAL"
+fi
+
+if [ -z "$DB_USERNAME" ]; then
+    echo "ERROR: DB_USERNAME is not set in Render environment."
+    echo "Please set DB_USERNAME in Render Dashboard → Environment."
+    echo "Current value: $DB_USERNAME_FINAL"
+fi
+
+if [ -z "$DB_PASSWORD" ]; then
+    echo "ERROR: DB_PASSWORD is not set in Render environment."
+    echo "Please set DB_PASSWORD in Render Dashboard → Environment."
 fi
 
 # Final check: Ensure APP_URL in .env uses HTTPS for Render (BEFORE clearing config cache)
@@ -203,9 +258,15 @@ php artisan route:clear || true
 php artisan view:clear || true
 php artisan cache:clear || true
 
-# Test database connection (optional - will show error if can't connect)
-echo "Testing database connection..."
-php artisan db:show --database=mysql 2>&1 || echo "Database connection test failed - make sure credentials are correct"
+# Test database connection (only if credentials are set)
+if [ ! -z "$DB_HOST" ] && [ "$DB_HOST" != "127.0.0.1" ] && [ "$DB_HOST" != "localhost" ] && \
+   [ ! -z "$DB_DATABASE" ] && [ "$DB_DATABASE" != "laravel" ] && \
+   [ ! -z "$DB_USERNAME" ] && [ ! -z "$DB_PASSWORD" ]; then
+    echo "Testing database connection..."
+    php artisan db:show --database=mysql 2>&1 || echo "Database connection test failed - check credentials and network connectivity"
+else
+    echo "Skipping database connection test - credentials not properly configured"
+fi
 
 # Copy Swagger UI assets to public directory (required for serving)
 # Use /swagger-assets/ instead of /docs/asset/ to avoid conflict with /docs route
@@ -283,11 +344,43 @@ else
 fi
 export SESSION_DRIVER="${SESSION_DRIVER:-array}"
 export DB_CONNECTION="${DB_CONNECTION:-mysql}"
-export DB_HOST="$DB_HOST_FINAL"
+
+# Export database variables - use environment variables if set, otherwise use final values
+# This ensures Render environment variables take precedence
+if [ ! -z "$DB_HOST" ]; then
+    export DB_HOST="$DB_HOST"
+else
+    export DB_HOST="$DB_HOST_FINAL"
+fi
+
+if [ ! -z "$DB_DATABASE" ]; then
+    export DB_DATABASE="$DB_DATABASE"
+else
+    export DB_DATABASE="$DB_DATABASE_FINAL"
+fi
+
+if [ ! -z "$DB_USERNAME" ]; then
+    export DB_USERNAME="$DB_USERNAME"
+else
+    export DB_USERNAME="$DB_USERNAME_FINAL"
+fi
+
+if [ ! -z "$DB_PASSWORD" ]; then
+    export DB_PASSWORD="$DB_PASSWORD"
+else
+    export DB_PASSWORD="$DB_PASSWORD_FINAL"
+fi
+
 export DB_PORT="${DB_PORT:-3306}"
-export DB_DATABASE="$DB_DATABASE_FINAL"
-export DB_USERNAME="$DB_USERNAME_FINAL"
-export DB_PASSWORD="$DB_PASSWORD_FINAL"
+
+# Final verification before starting
+echo "Final database configuration for Laravel:"
+echo "  DB_CONNECTION=${DB_CONNECTION}"
+echo "  DB_HOST=${DB_HOST}"
+echo "  DB_PORT=${DB_PORT}"
+echo "  DB_DATABASE=${DB_DATABASE}"
+echo "  DB_USERNAME=${DB_USERNAME}"
+echo "  DB_PASSWORD=${DB_PASSWORD:+***set***}"
 
 # Start the application with php artisan serve
 echo "Starting Laravel application on port ${PORT:-8000}..."
