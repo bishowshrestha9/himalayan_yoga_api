@@ -36,3 +36,8 @@ services:
       # APP_URL will be auto-detected from RENDER_EXTERNAL_URL and converted to HTTPS
       # If you need to override, set APP_URL in Render Dashboard:
       # APP_URL = https://himalayan-yogini-api.onrender.com
+      # CORS Configuration
+      # Set CORS_ALLOWED_ORIGINS in Render Dashboard → Environment if needed
+      # Example: http://209.126.86.149:3002,https://209.126.86.149:3002,http://localhost:3000
+      - key: CORS_ALLOWED_ORIGINS
+        value: http://209.126.86.149:3002,https://209.126.86.149:3002,http://localhost:3002   

@@ -18,12 +18,7 @@ class CorsMiddleware
         // Get the origin from the request
         $origin = $request->header('Origin');
         
-        // Check if request includes credentials (cookies, authorization headers, etc.)
-        $hasCredentials = $request->header('Authorization') || 
-                         $request->hasCookie('XSRF-TOKEN') ||
-                         $request->header('X-Requested-With') === 'XMLHttpRequest';
-        
-        // Default allowed origins (can be overridden via .env)
+        // Default allowed origins (can be overridden via .env or Render environment)
         $defaultOrigins = [
             'http://localhost:3000',
             'http://localhost:3001',
@@ -66,16 +61,14 @@ class CorsMiddleware
                     // Origin not in allowed list, but to support credentials mode,
                     // we must return the specific origin (not wildcard)
                     // This allows the request to proceed when withCredentials is true
+                    // For security, you can restrict this by setting CORS_ALLOWED_ORIGINS in Render
                     $allowedOrigin = $origin;
                 }
             }
-        } elseif ($hasCredentials) {
-            // No origin header but credentials are involved - use first allowed origin
-            // This shouldn't happen often, but handles edge cases
-            if ($allowedOrigins[0] !== '*') {
-                $allowedOrigin = $allowedOrigins[0];
-            }
         }
+        
+        // Log for debugging (remove in production if needed)
+        // \Log::info('CORS Origin', ['origin' => $origin, 'allowed' => $allowedOrigin]);
         
         // Handle preflight OPTIONS request
         if ($request->isMethod('OPTIONS')) {
