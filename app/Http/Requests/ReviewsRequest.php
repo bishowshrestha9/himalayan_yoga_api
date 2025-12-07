@@ -25,7 +25,7 @@ class ReviewsRequest extends FormRequest
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
             'review' => 'required|string',
-            'rating' => 'required|float|min:1|max:5',
+            'rating' => 'required|numeric|min:1|max:5',
             'status' => 'required|boolean',
         ];
     }

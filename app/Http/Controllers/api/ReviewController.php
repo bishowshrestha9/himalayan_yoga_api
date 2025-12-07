@@ -299,14 +299,14 @@ class ReviewController extends Controller
             )
         ]
     )]
-    public function getPublisableReviews()
+    public function getPublishableReviews()
     {
         try {
-            $reviews = Reviews::where('status', 1)->orderBy('created_at', 'desc')->take(3)->get();
+            $reviews = Reviews::where('status', true)->orderBy('created_at', 'desc')->take(3)->get();
             if (!$reviews) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'No publisable reviews found',
+                    'message' => 'No publishable reviews found',
                 ], 404);
             }
             $data = [];
@@ -321,14 +321,14 @@ class ReviewController extends Controller
             }
             return response()->json([
                 'status' => true,
-                'message' => 'Publisable reviews fetched successfully',
+                'message' => 'Publishable reviews fetched successfully',
                 'data' => $data,
             ], 200);
         }
         catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to fetch publisable reviews',
+                'message' => 'Failed to fetch publishable reviews',
                 'error' => $e->getMessage(),
             ], 500);
         }

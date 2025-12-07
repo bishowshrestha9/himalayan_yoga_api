@@ -27,6 +27,7 @@ class CorsMiddleware
             'http://127.0.0.1:3001',
             'http://127.0.0.1:3002',
             'http://209.126.86.149:3002',
+            'https://209.126.86.149:3002',
             'http://localhost',
             'http://127.0.0.1',
         ];
@@ -41,12 +42,25 @@ class CorsMiddleware
         $allowedOrigin = '*';
         
         if ($origin) {
-            // Check if the request origin is in the allowed list
+            // Check if the request origin is in the allowed list (exact match)
             if (in_array($origin, $allowedOrigins)) {
                 $allowedOrigin = $origin;
-            } elseif ($allowedOrigins[0] !== '*') {
-                // If specific origins are set and request origin not found, use first allowed
-                $allowedOrigin = $allowedOrigins[0];
+            } else {
+                // Try to match by converting http to https or vice versa
+                $httpVersion = str_replace('https://', 'http://', $origin);
+                $httpsVersion = str_replace('http://', 'https://', $origin);
+                
+                if (in_array($httpVersion, $allowedOrigins)) {
+                    $allowedOrigin = $httpVersion;
+                } elseif (in_array($httpsVersion, $allowedOrigins)) {
+                    $allowedOrigin = $httpsVersion;
+                } elseif ($allowedOrigins[0] !== '*') {
+                    // If specific origins are set and request origin not found, use first allowed
+                    $allowedOrigin = $allowedOrigins[0];
+                } else {
+                    // If wildcard is allowed, use the request origin
+                    $allowedOrigin = $origin;
+                }
             }
         } elseif ($allowedOrigins[0] === '*') {
             $allowedOrigin = '*';

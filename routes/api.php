@@ -27,13 +27,14 @@ Route::group(['prefix' => 'blogs'], function () {
     Route::get('/', [BlogsController::class, 'index']);
 });
 
-Route::prefix('reviews')->middleware(['auth:sanctum', 'admin'])->group(function () {
-    Route::post('/', [ReviewController::class, 'submitReview']);
-    Route::get('/', [ReviewController::class, 'getReviews']);
-    Route::get('/publisable', [ReviewController::class, 'getPublisableReviews']);
-    Route::delete('/', [ReviewController::class, 'deleteMultipleReviews']);
-});
-
+// Public review submission (no auth required)
 Route::prefix('reviews')->group(function () {
     Route::post('/', [ReviewController::class, 'submitReview']);
+});
+
+// Admin-only review management (requires auth + admin role)
+Route::prefix('reviews')->middleware(['auth:sanctum', 'admin'])->group(function () {
+    Route::get('/', [ReviewController::class, 'getReviews']);
+    Route::get('/publishable', [ReviewController::class, 'getPublishableReviews']);
+    Route::delete('/', [ReviewController::class, 'deleteMultipleReviews']);
 });
