@@ -22,15 +22,16 @@ class CorsMiddleware
         $hasCredentials = $request->header('Authorization') !== null;
         
         // Default allowed origins (can be overridden via .env or Render environment)
+        // Next.js is running on port 3002 (both dev and production)
         $defaultOrigins = [
-            'http://localhost:3000',
+            'http://localhost:3000',      // Next.js alternative port
             'http://localhost:3001',
-            'http://localhost:3002',
+            'http://localhost:3002',       // Next.js primary port (dev)
             'http://127.0.0.1:3000',
             'http://127.0.0.1:3001',
-            'http://127.0.0.1:3002',
-            'http://209.126.86.149:3002',
-            'https://209.126.86.149:3002',
+            'http://127.0.0.1:3002',        // Next.js primary port (dev - IP)
+            'http://209.126.86.149:3002',  // Production Next.js (HTTP)
+            'https://209.126.86.149:3002', // Production Next.js (HTTPS)
             'http://localhost',
             'http://127.0.0.1',
         ];
@@ -82,16 +83,16 @@ class CorsMiddleware
             $allowedOrigin = $origin;
         }
         
-        // Handle preflight OPTIONS request
+        // Handle preflight OPTIONS request (Next.js sends this for CORS)
         if ($request->isMethod('OPTIONS')) {
             $response = response('', 200)
                 ->header('Access-Control-Allow-Origin', $allowedOrigin)
-                ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
-                ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, X-CSRF-TOKEN')
+                ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD')
+                ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, X-CSRF-TOKEN, Cache-Control, Pragma')
                 ->header('Access-Control-Max-Age', '86400')
-                ->header('Access-Control-Expose-Headers', 'Content-Length, Content-Type');
+                ->header('Access-Control-Expose-Headers', 'Content-Length, Content-Type, Authorization');
             
-            // CRITICAL: Always set credentials to true when origin is specific (required for withCredentials)
+            // CRITICAL: Always set credentials to true when origin is specific (required for Next.js withCredentials)
             // When withCredentials is true, browser requires specific origin (not wildcard)
             if ($allowedOrigin !== '*') {
                 $response->header('Access-Control-Allow-Credentials', 'true');
@@ -102,16 +103,17 @@ class CorsMiddleware
 
         $response = $next($request);
 
-        // Add CORS headers to the response
+        // Add CORS headers to the response (for Next.js client-side requests)
         $corsResponse = $response
             ->header('Access-Control-Allow-Origin', $allowedOrigin)
-            ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
-            ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, X-CSRF-TOKEN')
+            ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD')
+            ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, X-CSRF-TOKEN, Cache-Control, Pragma')
             ->header('Access-Control-Max-Age', '86400')
-            ->header('Access-Control-Expose-Headers', 'Content-Length, Content-Type');
+            ->header('Access-Control-Expose-Headers', 'Content-Length, Content-Type, Authorization');
         
-        // CRITICAL: Always set credentials to true when origin is specific (required for withCredentials)
+        // CRITICAL: Always set credentials to true when origin is specific (required for Next.js withCredentials)
         // When withCredentials is true, browser requires specific origin (not wildcard)
+        // Next.js fetch/axios with credentials requires this
         if ($allowedOrigin !== '*') {
             $corsResponse->header('Access-Control-Allow-Credentials', 'true');
         }
