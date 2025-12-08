@@ -385,3 +385,13 @@ echo "  DB_PASSWORD=${DB_PASSWORD:+***set***}"
 # Start the application with php artisan serve
 echo "Starting Laravel application on port ${PORT:-8000}..."
 exec php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
+
+# CORS Configuration for Next.js (expose all origins, methods, headers, credentials, max age, expose, preflight)
+echo "CORS Configuration for Next.js (expose all origins, methods, headers, credentials, max age, expose, preflight)"
+echo "CORS_ALLOWED_ORIGINS=*"
+echo "CORS_ALLOWED_METHODS=*"
+echo "CORS_ALLOWED_HEADERS=*"
+echo "CORS_ALLOWED_CREDENTIALS=true"
+echo "CORS_ALLOWED_MAX_AGE=86400"
+echo "CORS_ALLOWED_EXPOSE=*"
+echo "CORS_ALLOWED_PREFLIGHT=true"
