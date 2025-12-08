@@ -78,25 +78,23 @@ class CorsMiddleware
         }
         
         // CRITICAL FIX: If origin exists, NEVER use wildcard (required for credentials)
-        // Even if origin is not in allowed list, return it to support credentials mode
+        // Always return the specific origin when provided
         if ($origin && $allowedOrigin === '*') {
             $allowedOrigin = $origin;
+        }
+        
+        // If no origin but we need credentials, use first allowed origin
+        if (!$origin && $hasCredentials && !empty($allowedOrigins)) {
+            $allowedOrigin = $allowedOrigins[0];
         }
         
         // Handle preflight OPTIONS request (Next.js sends this for CORS)
         if ($request->isMethod('OPTIONS')) {
             $response = response('', 200)
-                ->header('Access-Control-Allow-Origin', "http://localhost:3000")
-                ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD')
-                ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, X-CSRF-TOKEN, Cache-Control, Pragma')
-                ->header('Access-Control-Max-Age', '86400')
-                ->header('Access-Control-Expose-Headers', 'Content-Length, Content-Type, Authorization');
-            
-            // CRITICAL: Always set credentials to true when origin is specific (required for Next.js withCredentials)
-            // When withCredentials is true, browser requires specific origin (not wildcard)
-            if ($allowedOrigin !== '*') {
-                $response->header('Access-Control-Allow-Credentials', 'true');
-            }
+                ->header('Access-Control-Allow-Origin', $allowedOrigin)
+                ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
+                ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, Origin')
+                ->header('Access-Control-Allow-Credentials', 'true');
             
             return $response;
         }
@@ -105,21 +103,11 @@ class CorsMiddleware
 
         // Add CORS headers to the response (for Next.js client-side requests)
         $corsResponse = $response
-            ->header('Access-Control-Allow-Origin', "http://localhost:3002")
-            ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD')
-            ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, X-CSRF-TOKEN, Cache-Control, Pragma')
-            //credentials
+            ->header('Access-Control-Allow-Origin', $allowedOrigin)
+            ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
+            ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, Origin')
             ->header('Access-Control-Allow-Credentials', 'true')
-
-            ->header('Access-Control-Max-Age', '86400')
-            ->header('Access-Control-Expose-Headers', 'Content-Length, Content-Type, Authorization');
-        
-        // CRITICAL: Always set credentials to true when origin is specific (required for Next.js withCredentials)
-        // When withCredentials is true, browser requires specific origin (not wildcard)
-        // Next.js fetch/axios with credentials requires this
-        if ($allowedOrigin !== '*') {
-            $corsResponse->header('Access-Control-Allow-Credentials', 'true');
-        }
+            ->header('Access-Control-Expose-Headers', 'Authorization');
         
         return $corsResponse;
     }
