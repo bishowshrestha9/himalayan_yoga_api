@@ -78,18 +78,16 @@ class AuthController extends Controller
         $isHttps = $request->isSecure() || str_starts_with(config('app.url'), 'https://');
         $isProduction = config('app.env') === 'production';
         
-        // Cookie settings:
-        // IMPORTANT: Some browsers require Secure=true even for localhost with SameSite=None
-        // Try Secure=true for all cases - if it doesn't work on HTTP localhost, 
-        // the browser will reject it but that's expected behavior
-        // For production/HTTPS: Always use Secure=true
-        $secure = $isHttps || $isProduction;
-        
-        // However, for localhost HTTP, try Secure=false first (browsers may allow this)
-        // If this doesn't work, the frontend will need to use HTTPS or we'll need to return token in response
+        // Cookie settings for both localhost HTTP (dev) and production HTTPS:
+        // - Localhost HTTP: SameSite=None + Secure=false (browsers allow this exception for localhost)
+        // - Production HTTPS: SameSite=None + Secure=true (standard requirement)
         if ($isLocalhost && !$isHttps && !$isProduction) {
-            // Try Secure=false for localhost HTTP (browsers may allow SameSite=None with Secure=false for localhost)
+            // Localhost HTTP development: Use Secure=false
+            // Modern browsers (Chrome, Firefox, Safari) allow SameSite=None with Secure=false for localhost
             $secure = false;
+        } else {
+            // Production or HTTPS: Use Secure=true (required for SameSite=None)
+            $secure = true;
         }
         
         $sameSite = 'none'; // Required for cross-origin cookies
@@ -162,12 +160,41 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         // Delete the token from database
-        if ($request->user()) {
-            $request->user()->currentAccessToken()->delete();
+        $user = $request->user();
+        if ($user) {
+            // Delete all tokens for this user (or just the current one)
+            $user->currentAccessToken()?->delete();
         }
 
-        // Clear the auth_token cookie
-        $cookie = cookie()->forget('auth_token');
+        // Clear the auth_token cookie with same settings as when it was set
+        // This ensures the cookie is properly cleared even if it was set with specific attributes
+        $origin = $request->header('Origin');
+        $isLocalhost = $origin && (
+            str_contains($origin, 'localhost') || 
+            str_contains($origin, '127.0.0.1') ||
+            str_contains($origin, '::1')
+        );
+        $isHttps = $request->isSecure() || str_starts_with(config('app.url'), 'https://');
+        $isProduction = config('app.env') === 'production';
+        
+        // Use same secure setting as login
+        $secure = $isHttps || $isProduction;
+        if ($isLocalhost && !$isHttps && !$isProduction) {
+            $secure = false;
+        }
+        
+        // Create cookie with same attributes but expired (to clear it)
+        $cookie = cookie(
+            'auth_token',
+            '',
+            -1, // Expire immediately
+            '/',
+            null, // Same domain as when set
+            $secure,
+            true, // HttpOnly
+            false,
+            'none' // SameSite
+        );
 
         return response()->json([
             'status' => true,
