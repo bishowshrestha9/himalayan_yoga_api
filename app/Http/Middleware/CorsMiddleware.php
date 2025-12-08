@@ -86,7 +86,7 @@ class CorsMiddleware
         // Handle preflight OPTIONS request (Next.js sends this for CORS)
         if ($request->isMethod('OPTIONS')) {
             $response = response('', 200)
-                ->header('Access-Control-Allow-Origin', $allowedOrigin)
+                ->header('Access-Control-Allow-Origin', "http://localhost:3000")
                 ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD')
                 ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, X-CSRF-TOKEN, Cache-Control, Pragma')
                 ->header('Access-Control-Max-Age', '86400')
@@ -105,9 +105,12 @@ class CorsMiddleware
 
         // Add CORS headers to the response (for Next.js client-side requests)
         $corsResponse = $response
-            ->header('Access-Control-Allow-Origin', $allowedOrigin)
+            ->header('Access-Control-Allow-Origin', "http://localhost:3002")
             ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD')
             ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, X-CSRF-TOKEN, Cache-Control, Pragma')
+            //credentials
+            ->header('Access-Control-Allow-Credentials', 'true')
+
             ->header('Access-Control-Max-Age', '86400')
             ->header('Access-Control-Expose-Headers', 'Content-Length, Content-Type, Authorization');
         
