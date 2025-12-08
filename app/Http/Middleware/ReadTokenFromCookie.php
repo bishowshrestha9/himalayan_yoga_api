@@ -19,11 +19,14 @@ class ReadTokenFromCookie
     public function handle(Request $request, Closure $next): Response
     {
         // If no Authorization header is present, check for token in cookie
-        if (!$request->bearerToken() && $request->hasCookie('auth_token')) {
+        if (!$request->bearerToken()) {
+            // Get the token from cookie (auth_token is excluded from encryption)
             $token = $request->cookie('auth_token');
             
-            // Set the Authorization header so Sanctum can read it
-            $request->headers->set('Authorization', 'Bearer ' . $token);
+            // If we found a token in cookie, set it as Authorization header for Sanctum
+            if ($token) {
+                $request->headers->set('Authorization', 'Bearer ' . $token);
+            }
         }
 
         return $next($request);

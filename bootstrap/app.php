@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Laravel's built-in CORS middleware (uses config/cors.php)
         $middleware->api(prepend: [
             \Illuminate\Http\Middleware\HandleCors::class,
+            \App\Http\Middleware\EncryptCookies::class, // Custom encrypt cookies (excludes auth_token)
             \App\Http\Middleware\ReadTokenFromCookie::class, // Read token from cookie before Sanctum
         ]);
         
