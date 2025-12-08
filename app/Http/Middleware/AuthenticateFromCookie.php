@@ -17,16 +17,40 @@ class AuthenticateFromCookie
      */
     public function handle($request, Closure $next)
     {
+        // Try multiple methods to get the cookie
         $token = $request->cookie('auth_token');
+        
+        // Fallback: Check raw cookies (for cross-origin scenarios)
+        if (!$token && isset($_COOKIE['auth_token'])) {
+            $token = $_COOKIE['auth_token'];
+        }
+        
+        // Also try getting from all cookies
+        if (!$token) {
+            $allCookies = $request->cookies->all();
+            $token = $allCookies['auth_token'] ?? null;
+        }
 
         if (! $token) {
-            return response()->json(['message' => 'Unauthenticated'], 401);
+            return response()->json([
+                'message' => 'Unauthenticated',
+                'debug' => [
+                    'has_cookie' => $request->hasCookie('auth_token'),
+                    'all_cookies' => array_keys($request->cookies->all()),
+                    'raw_cookie' => isset($_COOKIE['auth_token']),
+                ]
+            ], 401);
         }
 
         $tokenModel = PersonalAccessToken::findToken($token);
 
         if (! $tokenModel) {
-            return response()->json(['message' => 'Invalid token'], 401);
+            return response()->json([
+                'message' => 'Invalid token',
+                'debug' => [
+                    'token_preview' => substr($token, 0, 20) . '...',
+                ]
+            ], 401);
         }
 
         Auth::login($tokenModel->tokenable);
@@ -34,4 +58,3 @@ class AuthenticateFromCookie
         return $next($request);
     }
 }
-
