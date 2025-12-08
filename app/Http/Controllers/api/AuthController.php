@@ -63,19 +63,44 @@ class AuthController extends Controller
         $token = $user->createToken('auth_token')->plainTextToken;
         
         // Set token as HTTP-only cookie for security
-        // SameSite=None and Secure are required for cross-origin requests
-        $isSecure = $request->isSecure() || config('app.env') === 'production';
+        // For cross-origin cookies (Next.js on different domain/port):
+        // - SameSite=None is required for cross-origin
+        // - Secure=true is normally required for SameSite=None, BUT
+        // - Browsers allow SameSite=None with Secure=false for localhost (special exception)
+        // - For production HTTPS, use Secure=true with SameSite=None
+        
+        $origin = $request->header('Origin');
+        $isLocalhost = $origin && (
+            str_contains($origin, 'localhost') || 
+            str_contains($origin, '127.0.0.1') ||
+            str_contains($origin, '::1')
+        );
+        $isHttps = $request->isSecure() || str_starts_with(config('app.url'), 'https://');
+        $isProduction = config('app.env') === 'production';
+        
+        // Cookie settings:
+        // - Localhost HTTP: SameSite=None + Secure=false (browsers allow this exception)
+        // - Production/HTTPS: SameSite=None + Secure=true (standard requirement)
+        if ($isLocalhost && !$isHttps && !$isProduction) {
+            // Localhost HTTP development: Use Secure=false (browsers allow this for localhost)
+            $secure = false;
+        } else {
+            // Production or HTTPS: Use Secure=true (required for SameSite=None)
+            $secure = true;
+        }
+        
+        $sameSite = 'none'; // Required for cross-origin cookies
         
         $cookie = cookie(
             'auth_token',           // Cookie name
             $token,                 // Token value
-            60 * 24 * 7,            // 7 days expiration
-            '/',                     // Path
-            null,                    // Domain (null = current domain)
-            $isSecure,              // Secure (HTTPS only in production)
+            60 * 24 * 7,            // 7 days expiration (in minutes)
+            '/',                     // Path (available to all paths)
+            null,                    // Domain (null = current domain, works cross-origin)
+            $secure,                // Secure flag (false for localhost HTTP, true for HTTPS/production)
             true,                    // HttpOnly (not accessible via JavaScript)
             false,                   // Raw (false = URL encode)
-            'none'                   // SameSite (none for cross-origin)
+            $sameSite               // SameSite=None (required for cross-origin)
         );
         
         return response()->json([

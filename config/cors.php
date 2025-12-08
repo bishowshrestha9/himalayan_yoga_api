@@ -31,8 +31,8 @@ return [
     // Allow all headers
     'allowed_headers' => ['*'],
 
-    // No special exposed headers needed
-    'exposed_headers' => [],
+    // Expose Set-Cookie header so browser can receive cookies
+    'exposed_headers' => ['Set-Cookie'],
 
     // Disable caching of preflight
     'max_age' => 0,
