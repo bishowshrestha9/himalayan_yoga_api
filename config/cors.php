@@ -23,9 +23,7 @@ return [
     // ✅ MUST BE SPECIFIC when using credentials
     'allowed_origins' => [
         'http://localhost:3002',
-        'http://127.0.0.1:3002',
         'http://209.126.86.149:3002',
-        'https://209.126.86.149:3002',
     ],
 
     // Do NOT use patterns when credentials are enabled

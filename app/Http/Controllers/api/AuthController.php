@@ -74,11 +74,11 @@ class AuthController extends Controller
             $token,                 // Token value
             60 * 24 * 7,            // 7 days expiration (in minutes)
             '/',                     // Path (available to all paths)
-            null,                // Domain: null = host-only cookie (works for cross-origin)
+            'localhost',                // Domain: null = host-only cookie (works for cross-origin)
             false,                // Secure flag (false for localhost HTTP, true for HTTPS/production)
             true,                    // HttpOnly (not accessible via JavaScript)
             false,                   // Raw (false = URL encode)
-            'Strict'              // SameSite=None (required for cross-origin)
+            'Lax'              // SameSite=None (required for cross-origin)
         );
         
         return $response;
@@ -120,46 +120,24 @@ class AuthController extends Controller
     )]
     public function logout(Request $request)
     {
-        // Delete the token from database
-        $user = $request->user();
-        if ($user) {
-            // Delete all tokens for this user (or just the current one)
-            $user->currentAccessToken()?->delete();
+        $token=$request->cookie('auth_token');
+        if(!$token){
+            return response()->json([
+                'message' => 'Unauthenticated'
+            ], 401);
         }
-
-        // Clear the auth_token cookie with same settings as when it was set
-        // This ensures the cookie is properly cleared even if it was set with specific attributes
-        $origin = $request->header('Origin');
-        $isLocalhost = $origin && (
-            str_contains($origin, 'localhost') || 
-            str_contains($origin, '127.0.0.1') ||
-            str_contains($origin, '::1')
-        );
-        $isHttps = $request->isSecure() || str_starts_with(config('app.url'), 'https://');
-        $isProduction = config('app.env') === 'production';
-        
-        // Use same secure setting as login
-        $secure = $isHttps || $isProduction;
-        if ($isLocalhost && !$isHttps && !$isProduction) {
-            $secure = false;
+        $tokenModel=PersonalAccessToken::findToken($token);
+        if(!$tokenModel){
+            return response()->json([
+                'message' => 'Invalid token'
+            ], 401);
         }
-        
-        // Create cookie with same attributes but expired (to clear it)
-        $cookie = cookie(
-            'auth_token',
-            '',
-            -1, // Expire immediately
-            '/',
-            null, // Same domain as when set
-            $secure,
-            true, // HttpOnly
-            false,
-            'none' // SameSite
-        );
-
+        $tokenModel->delete();
+        $cookie=Cookie::forget('auth_token')->withSameSite('Lax');
         return response()->json([
             'status' => true,
-            'message' => 'Logout successful',
-        ], 200)->cookie($cookie);
+            'message' => 'Logout successful'
+        ], 200)->withCookie($cookie);
     }
+        
 }
