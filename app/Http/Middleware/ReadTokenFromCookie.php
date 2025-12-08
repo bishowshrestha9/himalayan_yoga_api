@@ -20,8 +20,20 @@ class ReadTokenFromCookie
     {
         // If no Authorization header is present, check for token in cookie
         if (!$request->bearerToken()) {
-            // Get the token from cookie (auth_token is excluded from encryption)
+            // Try multiple methods to get the cookie
+            // Laravel's cookie() method might not work if cookie wasn't set properly
             $token = $request->cookie('auth_token');
+            
+            // Fallback: Check raw cookies (for cross-origin scenarios)
+            if (!$token && isset($_COOKIE['auth_token'])) {
+                $token = $_COOKIE['auth_token'];
+            }
+            
+            // Also try getting from all cookies
+            if (!$token) {
+                $allCookies = $request->cookies->all();
+                $token = $allCookies['auth_token'] ?? null;
+            }
             
             // If we found a token in cookie, set it as Authorization header for Sanctum
             if ($token) {

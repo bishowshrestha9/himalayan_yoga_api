@@ -47,7 +47,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Login successful",
+                        "description": "Login successful - Token is set as HTTP-only cookie",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -59,19 +59,6 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Login successful"
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "access_token": {
-                                                    "type": "string",
-                                                    "example": "1|xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                                                },
-                                                "token_type": {
-                                                    "type": "string",
-                                                    "example": "Bearer"
-                                                }
-                                            },
-                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -239,7 +226,8 @@
                                     "title",
                                     "description",
                                     "image",
-                                    "status"
+                                    "excerpt",
+                                    "is_active"
                                 ],
                                 "properties": {
                                     "title": {
@@ -254,7 +242,11 @@
                                         "type": "string",
                                         "example": "https://example.com/image.jpg"
                                     },
-                                    "status": {
+                                    "excerpt": {
+                                        "type": "string",
+                                        "example": "Blog Excerpt"
+                                    },
+                                    "is_active": {
                                         "type": "boolean",
                                         "example": true
                                     }
@@ -278,39 +270,6 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Blog created successfully"
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "title": {
-                                                    "type": "string",
-                                                    "example": "Blog Title"
-                                                },
-                                                "description": {
-                                                    "type": "string",
-                                                    "example": "Blog Description"
-                                                },
-                                                "image": {
-                                                    "type": "string",
-                                                    "example": "https://example.com/image.jpg"
-                                                },
-                                                "status": {
-                                                    "type": "boolean",
-                                                    "example": true
-                                                },
-                                                "created_at": {
-                                                    "type": "string",
-                                                    "example": "2021-01-01 00:00:00"
-                                                },
-                                                "updated_at": {
-                                                    "type": "string",
-                                                    "example": "2021-01-01 00:00:00"
-                                                }
-                                            },
-                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -427,9 +386,9 @@
                                                     "type": "string",
                                                     "example": "https://example.com/image.jpg"
                                                 },
-                                                "status": {
-                                                    "type": "boolean",
-                                                    "example": true
+                                                "excerpt": {
+                                                    "type": "string",
+                                                    "example": "Blog Excerpt"
                                                 },
                                                 "created_at": {
                                                     "type": "string",
@@ -521,7 +480,8 @@
                                     "title",
                                     "description",
                                     "image",
-                                    "status"
+                                    "excerpt",
+                                    "is_active"
                                 ],
                                 "properties": {
                                     "title": {
@@ -536,7 +496,11 @@
                                         "type": "string",
                                         "example": "https://example.com/updated-image.jpg"
                                     },
-                                    "status": {
+                                    "excerpt": {
+                                        "type": "string",
+                                        "example": "Updated Blog Excerpt"
+                                    },
+                                    "is_active": {
                                         "type": "boolean",
                                         "example": true
                                     }
@@ -560,39 +524,6 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Blog updated successfully"
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "title": {
-                                                    "type": "string",
-                                                    "example": "Updated Blog Title"
-                                                },
-                                                "description": {
-                                                    "type": "string",
-                                                    "example": "Updated Blog Description"
-                                                },
-                                                "image": {
-                                                    "type": "string",
-                                                    "example": "https://example.com/updated-image.jpg"
-                                                },
-                                                "status": {
-                                                    "type": "boolean",
-                                                    "example": true
-                                                },
-                                                "created_at": {
-                                                    "type": "string",
-                                                    "example": "2021-01-01 00:00:00"
-                                                },
-                                                "updated_at": {
-                                                    "type": "string",
-                                                    "example": "2021-01-01 00:00:00"
-                                                }
-                                            },
-                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -708,39 +639,6 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Blog deleted successfully"
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "title": {
-                                                    "type": "string",
-                                                    "example": "Blog Title"
-                                                },
-                                                "description": {
-                                                    "type": "string",
-                                                    "example": "Blog Description"
-                                                },
-                                                "image": {
-                                                    "type": "string",
-                                                    "example": "https://example.com/image.jpg"
-                                                },
-                                                "status": {
-                                                    "type": "boolean",
-                                                    "example": true
-                                                },
-                                                "created_at": {
-                                                    "type": "string",
-                                                    "example": "2021-01-01 00:00:00"
-                                                },
-                                                "updated_at": {
-                                                    "type": "string",
-                                                    "example": "2021-01-01 00:00:00"
-                                                }
-                                            },
-                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -1185,7 +1083,7 @@
                     "Reviews"
                 ],
                 "summary": "Get publishable reviews (latest 3 approved reviews)",
-                "operationId": "2087ad79e0fadbdb83ee703215e6e511",
+                "operationId": "bb26157ae11a4b65eab1a9b59683dc1e",
                 "responses": {
                     "200": {
                         "description": "Publishable reviews fetched successfully",

@@ -79,34 +79,50 @@ class AuthController extends Controller
         $isProduction = config('app.env') === 'production';
         
         // Cookie settings:
-        // - Localhost HTTP: SameSite=None + Secure=false (browsers allow this exception)
-        // - Production/HTTPS: SameSite=None + Secure=true (standard requirement)
+        // IMPORTANT: Some browsers require Secure=true even for localhost with SameSite=None
+        // Try Secure=true for all cases - if it doesn't work on HTTP localhost, 
+        // the browser will reject it but that's expected behavior
+        // For production/HTTPS: Always use Secure=true
+        $secure = $isHttps || $isProduction;
+        
+        // However, for localhost HTTP, try Secure=false first (browsers may allow this)
+        // If this doesn't work, the frontend will need to use HTTPS or we'll need to return token in response
         if ($isLocalhost && !$isHttps && !$isProduction) {
-            // Localhost HTTP development: Use Secure=false (browsers allow this for localhost)
+            // Try Secure=false for localhost HTTP (browsers may allow SameSite=None with Secure=false for localhost)
             $secure = false;
-        } else {
-            // Production or HTTPS: Use Secure=true (required for SameSite=None)
-            $secure = true;
         }
         
         $sameSite = 'none'; // Required for cross-origin cookies
+        
+        // CRITICAL: For cross-origin cookies, DO NOT set domain
+        // Setting domain restricts which domains can send the cookie
+        // By leaving domain as null, the cookie is "host-only" and can be sent cross-origin
+        // The cookie will be associated with the API server's domain, but can be sent from any origin
+        $domain = null;
         
         $cookie = cookie(
             'auth_token',           // Cookie name
             $token,                 // Token value
             60 * 24 * 7,            // 7 days expiration (in minutes)
             '/',                     // Path (available to all paths)
-            null,                    // Domain (null = current domain, works cross-origin)
+            $domain,                // Domain: null = host-only cookie (works for cross-origin)
             $secure,                // Secure flag (false for localhost HTTP, true for HTTPS/production)
             true,                    // HttpOnly (not accessible via JavaScript)
             false,                   // Raw (false = URL encode)
             $sameSite               // SameSite=None (required for cross-origin)
         );
         
-        return response()->json([
+        // Return response with cookie
+        // Note: If cookie doesn't work (browser blocks it), frontend can use token from response
+        $response = response()->json([
             'status' => true,   
             'message' => 'Login successful',
+            // Include token as fallback if cookie doesn't work
+            // Frontend should prefer cookie, but can use this if cookie is blocked
+            'token' => $token, // Fallback: use this if cookie isn't being sent
         ], 200)->cookie($cookie);
+        
+        return $response;
     }
 
 //make logout get request

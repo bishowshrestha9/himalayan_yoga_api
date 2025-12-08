@@ -10,6 +10,7 @@ class BlogsController extends Controller
 {
 
     //swagger documentation for index
+    //update swagger docs
     #[OA\Get(
         path: "/blogs",
         summary: "Get all blogs",
@@ -29,21 +30,10 @@ class BlogsController extends Controller
                     'message' => 'No blogs found',
                 ], 404);
             }
-            $data = [];
-            foreach ($blogs as $blog) {
-                $data[] = [ 'id' => $blog->id,
-                'title' => $blog->title,
-                'description' => $blog->description,
-                'image' => $blog->image,
-                'status' => $blog->status,
-                'created_at' => $blog->created_at,
-                'updated_at' => $blog->updated_at,
-            ];
-            }
             return response()->json([
                 'status' => true,
                 'message' => 'Blogs fetched successfully',
-                'data' => $data,
+                
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -64,12 +54,13 @@ class BlogsController extends Controller
             content: new OA\MediaType(
                 mediaType: "application/json",
                 schema: new OA\Schema(
-                    required: ["title", "description", "image", "status"],
+                    required: ["title", "description", "image", "excerpt", "is_active"],
                     properties: [
                         new OA\Property(property: "title", type: "string", example: "Blog Title"),
                         new OA\Property(property: "description", type: "string", example: "Blog Description"),
                         new OA\Property(property: "image", type: "string", example: "https://example.com/image.jpg"),
-                        new OA\Property(property: "status", type: "boolean", example: true)
+                        new OA\Property(property: "excerpt", type: "string", example: "Blog Excerpt"),
+                        new OA\Property(property: "is_active", type: "boolean", example: true)
                     ]
                 )
             )
@@ -84,19 +75,6 @@ class BlogsController extends Controller
                         properties: [
                             new OA\Property(property: "status", type: "boolean", example: true),
                             new OA\Property(property: "message", type: "string", example: "Blog created successfully"),
-                            new OA\Property(
-                                property: "data",
-                                type: "object",
-                                properties: [
-                                    new OA\Property(property: "id", type: "integer", example: 1),
-                                    new OA\Property(property: "title", type: "string", example: "Blog Title"),
-                                    new OA\Property(property: "description", type: "string", example: "Blog Description"),
-                                    new OA\Property(property: "image", type: "string", example: "https://example.com/image.jpg"),
-                                    new OA\Property(property: "status", type: "boolean", example: true),
-                                    new OA\Property(property: "created_at", type: "string", example: "2021-01-01 00:00:00"),
-                                    new OA\Property(property: "updated_at", type: "string", example: "2021-01-01 00:00:00")
-                                ]
-                            )
                         ]
                     )
                 )
@@ -140,19 +118,9 @@ class BlogsController extends Controller
     public function store(BlogRequest $request){
         try {
             $blog = Blogs::create($request->all());
-            $data = [
-                'id' => $blog->id,
-                'title' => $blog->title,
-                'description' => $blog->description,
-                'image' => $blog->image,
-                'status' => $blog->status,
-                'created_at' => $blog->created_at,
-                'updated_at' => $blog->updated_at,
-            ];
             return response()->json([
                 'status' => true,
                 'message' => 'Blog created successfully',
-                'data' => $data,
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
@@ -194,7 +162,7 @@ class BlogsController extends Controller
                                     new OA\Property(property: "title", type: "string", example: "Blog Title"),
                                     new OA\Property(property: "description", type: "string", example: "Blog Description"),
                                     new OA\Property(property: "image", type: "string", example: "https://example.com/image.jpg"),
-                                    new OA\Property(property: "status", type: "boolean", example: true),
+                                    new OA\Property(property: "excerpt", type: "string", example: "Blog Excerpt"),
                                     new OA\Property(property: "created_at", type: "string", example: "2021-01-01 00:00:00"),
                                     new OA\Property(property: "updated_at", type: "string", example: "2021-01-01 00:00:00")
                                 ]
@@ -241,19 +209,9 @@ class BlogsController extends Controller
                     'message' => 'Blog not found',
                 ], 404);
             }
-            $data = [
-                'id' => $blog->id,
-                'title' => $blog->title,
-                'description' => $blog->description,
-                'image' => $blog->image,
-                'status' => $blog->status,
-                'created_at' => $blog->created_at,
-                'updated_at' => $blog->updated_at,
-            ];
             return response()->json([
                 'status' => true,
                 'message' => 'Blog fetched successfully',
-                'data' => $data,
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -283,12 +241,13 @@ class BlogsController extends Controller
             content: new OA\MediaType(
                 mediaType: "application/json",
                 schema: new OA\Schema(
-                    required: ["title", "description", "image", "status"],
+                    required: ["title", "description", "image", "excerpt", "is_active"],
                     properties: [
                         new OA\Property(property: "title", type: "string", example: "Updated Blog Title"),
                         new OA\Property(property: "description", type: "string", example: "Updated Blog Description"),
                         new OA\Property(property: "image", type: "string", example: "https://example.com/updated-image.jpg"),
-                        new OA\Property(property: "status", type: "boolean", example: true)
+                        new OA\Property(property: "excerpt", type: "string", example: "Updated Blog Excerpt"),
+                        new OA\Property(property: "is_active", type: "boolean", example: true)
                     ]
                 )
             )
@@ -303,19 +262,6 @@ class BlogsController extends Controller
                         properties: [
                             new OA\Property(property: "status", type: "boolean", example: true),
                             new OA\Property(property: "message", type: "string", example: "Blog updated successfully"),
-                            new OA\Property(
-                                property: "data",
-                                type: "object",
-                                properties: [
-                                    new OA\Property(property: "id", type: "integer", example: 1),
-                                    new OA\Property(property: "title", type: "string", example: "Updated Blog Title"),
-                                    new OA\Property(property: "description", type: "string", example: "Updated Blog Description"),
-                                    new OA\Property(property: "image", type: "string", example: "https://example.com/updated-image.jpg"),
-                                    new OA\Property(property: "status", type: "boolean", example: true),
-                                    new OA\Property(property: "created_at", type: "string", example: "2021-01-01 00:00:00"),
-                                    new OA\Property(property: "updated_at", type: "string", example: "2021-01-01 00:00:00")
-                                ]
-                            )
                         ]
                     )
                 )
@@ -378,20 +324,10 @@ class BlogsController extends Controller
                     'message' => 'Blog not found',
                 ], 404);
             }
-            $blog->update($request->all());
-            $data = [
-                'id' => $blog->id,
-                'title' => $blog->title,
-                'description' => $blog->description,
-                'image' => $blog->image,
-                'status' => $blog->status,
-                'created_at' => $blog->created_at,
-                'updated_at' => $blog->updated_at,
-            ];
+            $blog->update($request->all()); 
             return response()->json([
                 'status' => true,
                 'message' => 'Blog updated successfully',
-                'data' => $data,
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -425,20 +361,7 @@ class BlogsController extends Controller
                     schema: new OA\Schema(
                         properties: [
                             new OA\Property(property: "status", type: "boolean", example: true),
-                            new OA\Property(property: "message", type: "string", example: "Blog deleted successfully"),
-                            new OA\Property(
-                                property: "data",
-                                type: "object",
-                                properties: [
-                                    new OA\Property(property: "id", type: "integer", example: 1),
-                                    new OA\Property(property: "title", type: "string", example: "Blog Title"),
-                                    new OA\Property(property: "description", type: "string", example: "Blog Description"),
-                                    new OA\Property(property: "image", type: "string", example: "https://example.com/image.jpg"),
-                                    new OA\Property(property: "status", type: "boolean", example: true),
-                                    new OA\Property(property: "created_at", type: "string", example: "2021-01-01 00:00:00"),
-                                    new OA\Property(property: "updated_at", type: "string", example: "2021-01-01 00:00:00")
-                                ]
-                            )
+                            new OA\Property(property: "message", type: "string", example: "Blog deleted successfully"),     
                         ]
                     )
                 )
@@ -481,20 +404,10 @@ class BlogsController extends Controller
                     'message' => 'Blog not found',
                 ], 404);
             }
-            $data = [
-                'id' => $blog->id,
-                'title' => $blog->title,
-                'description' => $blog->description,
-                'image' => $blog->image,
-                'status' => $blog->status,
-                'created_at' => $blog->created_at,
-                'updated_at' => $blog->updated_at,
-            ];  
             $blog->delete();
             return response()->json([
                 'status' => true,
                 'message' => 'Blog deleted successfully',
-                'data' => $data,
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
