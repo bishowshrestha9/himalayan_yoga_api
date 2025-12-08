@@ -7,7 +7,7 @@ use App\Http\Controllers\api\BlogsController;
 use App\Http\Middleware\AdminRoleCheckMiddleware;
 
 
-Route::middleware('auth:sanctum')->group(function () {      
+Route::middleware('auth.cookie')->group(function () {      
     Route::get('logout', [AuthController::class, 'logout']);
 });
 
@@ -15,7 +15,7 @@ Route::group(['prefix' => 'auth'], function () {
     Route::post('login', [AuthController::class, 'login']);
 });
 
-Route::prefix('blogs')->middleware(['auth:sanctum', 'admin'])->group(function () {
+Route::prefix('blogs')->middleware(['auth.cookie', 'admin'])->group(function () {
     Route::post('/', [BlogsController::class, 'store']);
     Route::put('/{id}', [BlogsController::class, 'update']);
     Route::delete('/{id}', [BlogsController::class, 'destroy']);
@@ -33,7 +33,7 @@ Route::prefix('reviews')->group(function () {
 });
 
 // Admin-only review management (requires auth + admin role)
-Route::prefix('reviews')->middleware(['auth:sanctum', 'admin'])->group(function () {
+Route::prefix('reviews')->middleware(['auth.cookie', 'admin'])->group(function () {
     Route::get('/', [ReviewController::class, 'getReviews']);
     Route::get('/publishable', [ReviewController::class, 'getPublishableReviews']);
     Route::delete('/', [ReviewController::class, 'deleteMultipleReviews']);

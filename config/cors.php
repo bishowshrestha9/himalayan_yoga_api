@@ -12,6 +12,9 @@ return [
     'paths' => [
         'api/*',
         'sanctum/csrf-cookie',
+        'logout',
+        'login',
+        
     ],
 
     // Allow all HTTP methods

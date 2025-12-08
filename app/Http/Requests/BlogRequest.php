@@ -21,12 +21,21 @@ class BlogRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $rules = [
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'image' => 'required|string',
-            'status' => 'required|boolean',
+            'excerpt' => 'nullable|string|max:500',
+            'is_active' => 'required|boolean',
         ];
+
+        // For create, image is required. For update, it's optional
+        if ($this->isMethod('post')) {
+            $rules['image'] = 'required|image|mimes:jpeg,jpg,png,gif,webp|max:5120'; // 5MB max
+        } else {
+            $rules['image'] = 'nullable|image|mimes:jpeg,jpg,png,gif,webp|max:5120';
+        }
+
+        return $rules;
     }
 
     public function messages(): array
@@ -35,7 +44,10 @@ class BlogRequest extends FormRequest
             'title.required' => 'Title is required',
             'description.required' => 'Description is required',
             'image.required' => 'Image is required',
-            'status.required' => 'Status is required',
+            'image.image' => 'The file must be an image',
+            'image.mimes' => 'The image must be a file of type: jpeg, jpg, png, gif, webp',
+            'image.max' => 'The image may not be greater than 5MB',
+            'is_active.required' => 'Status is required',
         ];
     }
 }

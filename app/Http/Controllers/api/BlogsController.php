@@ -6,6 +6,8 @@ use App\Models\Blogs;
 use OpenApi\Attributes as OA;
 use Illuminate\Http\Request;
 use App\Http\Requests\BlogRequest;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 class BlogsController extends Controller
 {
 
@@ -24,16 +26,23 @@ class BlogsController extends Controller
     public function index(){
         try {
             $blogs = Blogs::all();
-            if (!$blogs) {
+            if ($blogs->isEmpty()) {
                 return response()->json([
                     'status' => false,
                     'message' => 'No blogs found',
                 ], 404);
             }
+            
+            // Add full image URL to each blog
+            $blogs->transform(function ($blog) {
+                $blog->image_url = $blog->image ? asset('storage/' . $blog->image) : null;
+                return $blog;
+            });
+            
             return response()->json([
                 'status' => true,
                 'message' => 'Blogs fetched successfully',
-                
+                'data' => $blogs,
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -52,13 +61,13 @@ class BlogsController extends Controller
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\MediaType(
-                mediaType: "application/json",
+                mediaType: "multipart/form-data",
                 schema: new OA\Schema(
-                    required: ["title", "description", "image", "excerpt", "is_active"],
+                    required: ["title", "description", "image", "is_active"],
                     properties: [
                         new OA\Property(property: "title", type: "string", example: "Blog Title"),
                         new OA\Property(property: "description", type: "string", example: "Blog Description"),
-                        new OA\Property(property: "image", type: "string", example: "https://example.com/image.jpg"),
+                        new OA\Property(property: "image", type: "string", format: "binary", description: "Image file (jpeg, jpg, png, gif, webp, max 5MB)"),
                         new OA\Property(property: "excerpt", type: "string", example: "Blog Excerpt"),
                         new OA\Property(property: "is_active", type: "boolean", example: true)
                     ]
@@ -117,10 +126,36 @@ class BlogsController extends Controller
     )]
     public function store(BlogRequest $request){
         try {
-            $blog = Blogs::create($request->all());
+            $data = $request->only(['title', 'description', 'excerpt', 'is_active']);
+            
+            // Handle image upload
+            if ($request->hasFile('image')) {
+                $image = $request->file('image');
+                
+                // Store in temp directory first
+                $tempPath = $image->store('temp/blogs', 'public');
+                
+                // Generate unique filename
+                $extension = $image->getClientOriginalExtension();
+                $filename = 'blog_' . time() . '_' . Str::random(10) . '.' . $extension;
+                
+                // Move from temp to permanent location
+                $permanentPath = 'blogs/' . $filename;
+                Storage::disk('public')->move($tempPath, $permanentPath);
+                
+                // Store the path in database (relative to storage/app/public)
+                $data['image'] = $permanentPath;
+            }
+            
+            $blog = Blogs::create($data);
+            
             return response()->json([
                 'status' => true,
                 'message' => 'Blog created successfully',
+                'data' => [
+                    'id' => $blog->id,
+                    'image_url' => asset('storage/' . $blog->image),
+                ],
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
@@ -209,9 +244,14 @@ class BlogsController extends Controller
                     'message' => 'Blog not found',
                 ], 404);
             }
+            
+            // Add full image URL
+            $blog->image_url = $blog->image ? asset('storage/' . $blog->image) : null;
+            
             return response()->json([
                 'status' => true,
                 'message' => 'Blog fetched successfully',
+                'data' => $blog,
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -239,13 +279,13 @@ class BlogsController extends Controller
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\MediaType(
-                mediaType: "application/json",
+                mediaType: "multipart/form-data",
                 schema: new OA\Schema(
-                    required: ["title", "description", "image", "excerpt", "is_active"],
+                    required: ["title", "description", "is_active"],
                     properties: [
                         new OA\Property(property: "title", type: "string", example: "Updated Blog Title"),
                         new OA\Property(property: "description", type: "string", example: "Updated Blog Description"),
-                        new OA\Property(property: "image", type: "string", example: "https://example.com/updated-image.jpg"),
+                        new OA\Property(property: "image", type: "string", format: "binary", description: "Image file (jpeg, jpg, png, gif, webp, max 5MB) - optional for update"),
                         new OA\Property(property: "excerpt", type: "string", example: "Updated Blog Excerpt"),
                         new OA\Property(property: "is_active", type: "boolean", example: true)
                     ]
@@ -324,10 +364,42 @@ class BlogsController extends Controller
                     'message' => 'Blog not found',
                 ], 404);
             }
-            $blog->update($request->all()); 
+            
+            $data = $request->only(['title', 'description', 'excerpt', 'is_active']);
+            
+            // Handle image upload if new image is provided
+            if ($request->hasFile('image')) {
+                // Delete old image if exists
+                if ($blog->image && Storage::disk('public')->exists($blog->image)) {
+                    Storage::disk('public')->delete($blog->image);
+                }
+                
+                $image = $request->file('image');
+                
+                // Store in temp directory first
+                $tempPath = $image->store('temp/blogs', 'public');
+                
+                // Generate unique filename
+                $extension = $image->getClientOriginalExtension();
+                $filename = 'blog_' . time() . '_' . Str::random(10) . '.' . $extension;
+                
+                // Move from temp to permanent location
+                $permanentPath = 'blogs/' . $filename;
+                Storage::disk('public')->move($tempPath, $permanentPath);
+                
+                // Store the path in database
+                $data['image'] = $permanentPath;
+            }
+            
+            $blog->update($data);
+            
             return response()->json([
                 'status' => true,
                 'message' => 'Blog updated successfully',
+                'data' => [
+                    'id' => $blog->id,
+                    'image_url' => asset('storage/' . $blog->image),
+                ],
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -404,7 +476,14 @@ class BlogsController extends Controller
                     'message' => 'Blog not found',
                 ], 404);
             }
+            
+            // Delete associated image file
+            if ($blog->image && Storage::disk('public')->exists($blog->image)) {
+                Storage::disk('public')->delete($blog->image);
+            }
+            
             $blog->delete();
+            
             return response()->json([
                 'status' => true,
                 'message' => 'Blog deleted successfully',

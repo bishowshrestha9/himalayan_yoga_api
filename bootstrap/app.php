@@ -19,9 +19,10 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\ReadTokenFromCookie::class, // Read token from cookie before Sanctum
         ]);
         
-        // Register admin middleware alias
+        // Register middleware aliases
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminRoleCheckMiddleware::class,
+            'auth.cookie' => \App\Http\Middleware\AuthenticateFromCookie::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
