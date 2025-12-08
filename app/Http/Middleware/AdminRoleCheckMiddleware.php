@@ -15,22 +15,27 @@ class AdminRoleCheckMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // auth:sanctum should have already authenticated the user
-        // If user is null here, it means auth:sanctum failed
+        // auth:sanctum middleware should have already authenticated the user
+        // Check if user is set
         $user = $request->user();
         
+        // Also try Auth::user() as fallback
         if (!$user) {
-            // Check if there's an authorization header
-            $authHeader = $request->header('Authorization');
-            $hasToken = !empty($authHeader) && str_starts_with($authHeader, 'Bearer ');
+            $user = \Illuminate\Support\Facades\Auth::user();
+        }
+        
+        if (!$user) {
+            // Check if there's a cookie
+            $token = $request->cookie('auth_token');
             
             return response()->json([
                 'status' => false,
-                'message' => 'Unauthenticated - Please check your token',
+                'message' => 'Unauthenticated - User not set',
                 'debug' => [
-                    'has_auth_header' => !empty($authHeader),
-                    'has_bearer_token' => $hasToken,
-                    'header_preview' => $hasToken ? substr($authHeader, 0, 30) . '...' : 'No Authorization header',
+                    'has_cookie' => !empty($token),
+                    'request_user' => $request->user() ? 'set' : 'null',
+                    'auth_user' => \Illuminate\Support\Facades\Auth::user() ? 'set' : 'null',
+                    'cookie_preview' => $token ? substr($token, 0, 20) . '...' : 'no cookie',
                 ],
             ], 401);
         }

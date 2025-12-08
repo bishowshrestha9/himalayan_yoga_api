@@ -30,7 +30,7 @@ class BlogRequest extends FormRequest
 
         // For create, image is required. For update, it's optional
         if ($this->isMethod('post')) {
-            $rules['image'] = 'required|image|mimes:jpeg,jpg,png,gif,webp|max:5120'; // 5MB max
+            $rules['image'] = 'nullable|image|mimes:jpeg,jpg,png,gif,webp|max:5120'; // 5MB max
         } else {
             $rules['image'] = 'nullable|image|mimes:jpeg,jpg,png,gif,webp|max:5120';
         }

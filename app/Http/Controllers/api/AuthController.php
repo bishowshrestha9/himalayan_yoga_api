@@ -63,26 +63,40 @@ class AuthController extends Controller
         $token = $user->createToken('auth_token')->plainTextToken;
         
         // Detect environment for cookie settings
-        $origin = $request->header('Origin');
-        $isLocalhost = $origin && (
+        // Check multiple sources: Origin header, Referer header, and request host
+        $origin = $request->header('Origin') ?? $request->header('Referer') ?? '';
+        $requestHost = $request->getHost();
+        $requestScheme = $request->getScheme();
+        
+        // Check if this is localhost (from any source)
+        $isLocalhost = (
             str_contains($origin, 'localhost') || 
-            str_contains($origin, '127.0.0.1')
+            str_contains($origin, '127.0.0.1') ||
+            str_contains($requestHost, 'localhost') ||
+            str_contains($requestHost, '127.0.0.1') ||
+            $requestHost === '127.0.0.1' ||
+            $requestHost === 'localhost'
         );
-        $isHttps = $request->isSecure() || str_starts_with(config('app.url'), 'https://');
+        
+        $isHttps = $request->isSecure() || $requestScheme === 'https' || str_starts_with(config('app.url'), 'https://');
         $isProduction = config('app.env') === 'production';
         
-        // Cookie settings for localhost HTTP vs production HTTPS
-        if ($isLocalhost && !$isHttps && !$isProduction) {
-            // Localhost HTTP: SameSite=None + Secure=false (browsers allow this exception)
-            $secure = false;
+        // Determine if this is a cross-origin request
+        $origin = $request->header('Origin');
+        $isCrossOrigin = $origin && $origin !== $request->getSchemeAndHttpHost();
+        
+        // Cookie settings based on context
+        if ($isCrossOrigin) {
+            // Cross-origin: MUST use SameSite=None with Secure=true
+            // Note: This requires HTTPS even on localhost
             $sameSite = 'none';
-            $domain = null; // CRITICAL: null for localhost, not 'localhost'
-        } else {
-            // Production HTTPS: SameSite=None + Secure=true
             $secure = true;
-            $sameSite = 'none';
-            $domain = null; // null for host-only cookie
+        } else {
+            // Same-origin: Can use SameSite=Lax without Secure requirement
+            $sameSite = 'lax';
+            $secure = $isHttps; // Only set secure if using HTTPS
         }
+        $domain = null; // null for host-only cookie
         
         $response = response()->json([
             'status' => true,   
@@ -93,11 +107,11 @@ class AuthController extends Controller
             $token,                 // Token value
             60 * 24 * 7,            // 7 days expiration (in minutes)
             '/',                     // Path (available to all paths)
-            $domain,                // Domain: null for localhost (CRITICAL FIX)
-            $secure,                // Secure flag (false for localhost HTTP, true for HTTPS/production)
+            $domain,                // Domain: null for localhost
+            $secure,                // Secure flag
             true,                    // HttpOnly (not accessible via JavaScript)
             false,                   // Raw (false = URL encode)
-            $sameSite               // SameSite: 'none' for cross-origin (CRITICAL FIX)
+            $sameSite               // SameSite setting
         );
         
         return $response;
@@ -139,33 +153,42 @@ class AuthController extends Controller
     )]
     public function logout(Request $request)
     {
-        $token = $request->cookie('auth_token');
-        if (!$token) {
+        // With auth:sanctum middleware, user is already authenticated
+        $user = $request->user();
+        
+        if (!$user) {
             return response()->json([
                 'message' => 'Unauthenticated'
             ], 401);
         }
         
-        $tokenModel = PersonalAccessToken::findToken($token);
-        if (!$tokenModel) {
-            return response()->json([
-                'message' => 'Invalid token'
-            ], 401);
-        }
+        // Delete the current access token
+        // Get the token from the request (either from header or cookie via ReadTokenFromCookie)
+        $token = $request->bearerToken();
         
-        $tokenModel->delete();
+        if ($token) {
+            $tokenModel = PersonalAccessToken::findToken($token);
+            if ($tokenModel) {
+                $tokenModel->delete();
+            }
+        } else {
+            // Fallback: delete all tokens for the user (if token not found)
+            $user->tokens()->delete();
+        }
         
         // Clear cookie with same settings as login
         $origin = $request->header('Origin');
-        $isLocalhost = $origin && (
-            str_contains($origin, 'localhost') || 
-            str_contains($origin, '127.0.0.1')
-        );
+        $isCrossOrigin = $origin && $origin !== $request->getSchemeAndHttpHost();
         $isHttps = $request->isSecure() || str_starts_with(config('app.url'), 'https://');
-        $isProduction = config('app.env') === 'production';
         
-        $secure = ($isLocalhost && !$isHttps && !$isProduction) ? false : true;
-        $sameSite = 'none';
+        // Match cookie settings with login
+        if ($isCrossOrigin) {
+            $sameSite = 'none';
+            $secure = true;
+        } else {
+            $sameSite = 'lax';
+            $secure = $isHttps;
+        }
         $domain = null;
         
         $cookie = cookie(

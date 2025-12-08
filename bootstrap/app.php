@@ -12,17 +12,16 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Laravel's built-in CORS middleware (uses config/cors.php)
+        // Add middleware for API routes
         $middleware->api(prepend: [
-            \Illuminate\Http\Middleware\HandleCors::class,
             \App\Http\Middleware\EncryptCookies::class, // Custom encrypt cookies (excludes auth_token)
+            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class, // Ensure cookies are added to response
             \App\Http\Middleware\ReadTokenFromCookie::class, // Read token from cookie before Sanctum
         ]);
         
         // Register middleware aliases
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminRoleCheckMiddleware::class,
-            'auth.cookie' => \App\Http\Middleware\AuthenticateFromCookie::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

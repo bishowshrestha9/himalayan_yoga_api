@@ -7,20 +7,10 @@ use App\Http\Controllers\api\BlogsController;
 use App\Http\Middleware\AdminRoleCheckMiddleware;
 
 
-Route::middleware('auth.cookie')->group(function () {      
-    Route::get('logout', [AuthController::class, 'logout']);
-});
-
+// Public routes
 Route::group(['prefix' => 'auth'], function () {
     Route::post('login', [AuthController::class, 'login']);
 });
-
-Route::prefix('blogs')->middleware(['auth.cookie', 'admin'])->group(function () {
-    Route::post('/', [BlogsController::class, 'store']);
-    Route::put('/{id}', [BlogsController::class, 'update']);
-    Route::delete('/{id}', [BlogsController::class, 'destroy']);
-});
-
 
 Route::group(['prefix' => 'blogs'], function () {
     Route::get('/{id}', [BlogsController::class, 'show']);
@@ -32,9 +22,21 @@ Route::prefix('reviews')->group(function () {
     Route::post('/', [ReviewController::class, 'submitReview']);
 });
 
-// Admin-only review management (requires auth + admin role)
-Route::prefix('reviews')->middleware(['auth.cookie', 'admin'])->group(function () {
-    Route::get('/', [ReviewController::class, 'getReviews']);
-    Route::get('/publishable', [ReviewController::class, 'getPublishableReviews']);
-    Route::delete('/', [ReviewController::class, 'deleteMultipleReviews']);
+// Protected routes - use Sanctum for authentication
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('logout', [AuthController::class, 'logout']);
+    
+    // Admin-only blog management
+    Route::prefix('blogs')->middleware('admin')->group(function () {
+        Route::post('/', [BlogsController::class, 'store']);
+        Route::put('/{id}', [BlogsController::class, 'update']);
+        Route::delete('/{id}', [BlogsController::class, 'destroy']);
+    });
+    
+    // Admin-only review management
+    Route::prefix('reviews')->middleware('admin')->group(function () {
+        Route::get('/', [ReviewController::class, 'getReviews']);
+        Route::get('/publishable', [ReviewController::class, 'getPublishableReviews']);
+        Route::delete('/', [ReviewController::class, 'deleteMultipleReviews']);
+    });
 });

@@ -21,7 +21,6 @@ class ReadTokenFromCookie
         // If no Authorization header is present, check for token in cookie
         if (!$request->bearerToken()) {
             // Try multiple methods to get the cookie
-            // Laravel's cookie() method might not work if cookie wasn't set properly
             $token = $request->cookie('auth_token');
             
             // Fallback: Check raw cookies (for cross-origin scenarios)
@@ -35,9 +34,33 @@ class ReadTokenFromCookie
                 $token = $allCookies['auth_token'] ?? null;
             }
             
-            // If we found a token in cookie, set it as Authorization header for Sanctum
+            // If we found a token in cookie, decode and set it as Authorization header for Sanctum
             if ($token) {
+                // Clean and decode the token (cookies might be URL-encoded)
+                $token = trim($token);
+                // Decode multiple times in case of double encoding
+                $decodedToken = urldecode($token);
+                while ($decodedToken !== $token) {
+                    $token = $decodedToken;
+                    $decodedToken = urldecode($token);
+                }
+                $token = $decodedToken;
+                
+                // Check for Sanctum token prefix and remove it if present
+                $tokenPrefix = config('sanctum.token_prefix', '');
+                if ($tokenPrefix && str_starts_with($token, $tokenPrefix)) {
+                    $token = substr($token, strlen($tokenPrefix));
+                }
+                
+                // Set as Authorization header for Sanctum to handle
+                // Set it in multiple places to ensure Sanctum can read it
                 $request->headers->set('Authorization', 'Bearer ' . $token);
+                
+                // Also set it in the server array for compatibility (some frameworks read from here)
+                $request->server->set('HTTP_AUTHORIZATION', 'Bearer ' . $token);
+                
+                // Ensure the header is available via get() method
+                $request->headers->add(['Authorization' => 'Bearer ' . $token]);
             }
         }
 
