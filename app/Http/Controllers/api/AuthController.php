@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cookie;
 use OpenApi\Attributes as OA;
 
 class AuthController extends Controller
@@ -31,21 +32,13 @@ class AuthController extends Controller
         responses: [
             new OA\Response(
                 response: 200,
-                description: "Login successful",
+                description: "Login successful - Token is set as HTTP-only cookie",
                 content: new OA\MediaType(
                     mediaType: "application/json",
                     schema: new OA\Schema(
                         properties: [
                             new OA\Property(property: "status", type: "boolean", example: true),
-                            new OA\Property(property: "message", type: "string", example: "Login successful"),
-                            new OA\Property(
-                                property: "data",
-                                type: "object",
-                                properties: [
-                                    new OA\Property(property: "access_token", type: "string", example: "1|xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"),
-                                    new OA\Property(property: "token_type", type: "string", example: "Bearer")
-                                ]
-                            )
+                            new OA\Property(property: "message", type: "string", example: "Login successful")
                         ]
                     )
                 )
@@ -69,14 +62,26 @@ class AuthController extends Controller
         $user = User::where('email', $request->email)->firstOrFail();
         $token = $user->createToken('auth_token')->plainTextToken;
         
+        // Set token as HTTP-only cookie for security
+        // SameSite=None and Secure are required for cross-origin requests
+        $isSecure = $request->isSecure() || config('app.env') === 'production';
+        
+        $cookie = cookie(
+            'auth_token',           // Cookie name
+            $token,                 // Token value
+            60 * 24 * 7,            // 7 days expiration
+            '/',                     // Path
+            null,                    // Domain (null = current domain)
+            $isSecure,              // Secure (HTTPS only in production)
+            true,                    // HttpOnly (not accessible via JavaScript)
+            false,                   // Raw (false = URL encode)
+            'none'                   // SameSite (none for cross-origin)
+        );
+        
         return response()->json([
             'status' => true,   
             'message' => 'Login successful',
-            'data' => [
-                'access_token' => $token,
-                'token_type' => 'Bearer',
-            ],
-        ], 200);
+        ], 200)->cookie($cookie);
     }
 
 //make logout get request
@@ -115,11 +120,17 @@ class AuthController extends Controller
     )]
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        // Delete the token from database
+        if ($request->user()) {
+            $request->user()->currentAccessToken()->delete();
+        }
+
+        // Clear the auth_token cookie
+        $cookie = cookie()->forget('auth_token');
 
         return response()->json([
             'status' => true,
             'message' => 'Logout successful',
-        ], 200);
+        ], 200)->cookie($cookie);
     }
 }

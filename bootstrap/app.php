@@ -12,8 +12,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Laravel's built-in CORS middleware (uses config/cors.php)
         $middleware->api(prepend: [
-            \App\Http\Middleware\CorsMiddleware::class,
+            \Illuminate\Http\Middleware\HandleCors::class,
+            \App\Http\Middleware\ReadTokenFromCookie::class, // Read token from cookie before Sanctum
         ]);
         
         // Register admin middleware alias
