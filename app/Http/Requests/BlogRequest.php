@@ -47,6 +47,7 @@ class BlogRequest extends FormRequest
             'description' => $isUpdate ? 'sometimes|required|string' : 'required|string',
             'excerpt' => 'nullable|string|max:500',
             'is_active' => $isUpdate ? 'sometimes|required|boolean' : 'required|boolean',
+            'slug' => $isUpdate ? 'sometimes|required|string|unique:blogs,slug,' . $this->route('id') : 'required|string|unique:blogs,slug',
         ];
 
         // For create, image is required. For update, it's optional
@@ -65,6 +66,7 @@ class BlogRequest extends FormRequest
             'title.required' => 'Title is required',
             'description.required' => 'Description is required',
             'image.required' => 'Image is required',
+            'slug.required' => 'Slug is required',
             'image.file' => 'The image must be a file',
             'image.image' => 'The uploaded file must be an image (jpeg, jpg, png, gif, webp)',
             'image.mimes' => 'The image must be a file of type: jpeg, jpg, png, gif, webp',

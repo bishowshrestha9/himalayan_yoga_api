@@ -17,6 +17,7 @@ return new class extends Migration
             $table->text('excerpt');
             $table->text('description');
             $table->string('image')->nullable();
+            $table->string('slug')->unique();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });

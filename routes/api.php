@@ -5,6 +5,8 @@ use App\Http\Controllers\api\ReviewController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\api\BlogsController;
 use App\Http\Middleware\AdminRoleCheckMiddleware;
+use App\Http\Middleware\SuperAdminMiddleware;
+use App\Http\Controllers\api\UserController;
 
 
 // Public routes
@@ -41,3 +43,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/', [ReviewController::class, 'deleteMultipleReviews']);
     });
 });
+
+Route::prefix('users')->middleware(['auth:sanctum', 'super_admin'])->group(function () {
+   Route::post('/admin', [UserController::class, 'addAdmin']);
+   Route::post('/{id}/status', [UserController::class, 'updateStatus']);
+   Route::get('/admins', [UserController::class, 'getAdmins']);
+   
+});
+
+
+Route::post('users/change-password', [UserController::class, 'changePassword'])->middleware('auth:sanctum','admin');
+
