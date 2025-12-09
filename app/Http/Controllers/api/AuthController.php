@@ -162,4 +162,14 @@ class AuthController extends Controller
         'message' => 'Logged out'
     ]); 
     }
+
+
+
+    public function me(Request $request){
+        return response()->json([
+            'status' => true,
+            'role' => $request->user()->role
+            
+        ]);
+    }
 }

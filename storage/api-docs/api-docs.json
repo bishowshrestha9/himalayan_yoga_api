@@ -697,6 +697,404 @@
                 ]
             }
         },
+        "/instructors": {
+            "get": {
+                "tags": [
+                    "Instructors"
+                ],
+                "summary": "Get all instructors",
+                "operationId": "55366c47ae0c51e69f40d8fd479290ea",
+                "responses": {
+                    "200": {
+                        "description": "Instructors fetched successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Instructors fetched successfully"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "John Doe"
+                                                    },
+                                                    "profession": {
+                                                        "type": "string",
+                                                        "example": "Yoga Instructor"
+                                                    },
+                                                    "experience": {
+                                                        "type": "integer",
+                                                        "example": 5
+                                                    },
+                                                    "bio": {
+                                                        "type": "string",
+                                                        "example": "Experienced yoga instructor"
+                                                    },
+                                                    "specialities": {
+                                                        "type": "string",
+                                                        "example": "Hatha, Vinyasa"
+                                                    },
+                                                    "certifications": {
+                                                        "type": "string",
+                                                        "example": "RYT-200, RYT-500"
+                                                    },
+                                                    "image_url": {
+                                                        "type": "string",
+                                                        "example": "https://example.com/storage/instructors/image.jpg"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No instructors found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "No instructors found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Instructors"
+                ],
+                "summary": "Create a new instructor",
+                "operationId": "bdd3668e014b14d3e9465c48e0d76810",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "profession",
+                                    "experience"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "John Doe"
+                                    },
+                                    "profession": {
+                                        "type": "string",
+                                        "example": "Yoga Instructor"
+                                    },
+                                    "experience": {
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "bio": {
+                                        "type": "string",
+                                        "example": "Experienced yoga instructor with passion for teaching"
+                                    },
+                                    "specialities": {
+                                        "type": "string",
+                                        "example": "Hatha, Vinyasa, Meditation"
+                                    },
+                                    "certifications": {
+                                        "description": "Comma-separated certifications",
+                                        "type": "string",
+                                        "example": "RYT-200, RYT-500, E-RYT"
+                                    },
+                                    "image": {
+                                        "description": "Image file (jpeg, jpg, png, gif, webp, max 5MB)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Instructor created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Instructor created successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "500": {
+                        "description": "Failed to create instructor"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/instructors/{id}": {
+            "get": {
+                "tags": [
+                    "Instructors"
+                ],
+                "summary": "Get an instructor by ID",
+                "operationId": "ad96d53b58c5aa44dc42f149728ff39f",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Instructor ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Instructor fetched successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Instructor fetched successfully"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "John Doe"
+                                                },
+                                                "profession": {
+                                                    "type": "string",
+                                                    "example": "Yoga Instructor"
+                                                },
+                                                "experience": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "bio": {
+                                                    "type": "string"
+                                                },
+                                                "specialities": {
+                                                    "type": "string"
+                                                },
+                                                "certifications": {
+                                                    "type": "string"
+                                                },
+                                                "image_url": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Instructor not found"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Instructors"
+                ],
+                "summary": "Update an instructor",
+                "operationId": "8f07a8cc45e3b5ab862538d51a43c56b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Instructor ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "John Doe"
+                                    },
+                                    "profession": {
+                                        "type": "string",
+                                        "example": "Yoga Instructor"
+                                    },
+                                    "experience": {
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "bio": {
+                                        "type": "string"
+                                    },
+                                    "specialities": {
+                                        "type": "string"
+                                    },
+                                    "certifications": {
+                                        "description": "Comma-separated certifications",
+                                        "type": "string",
+                                        "example": "RYT-200, RYT-500, E-RYT"
+                                    },
+                                    "image": {
+                                        "description": "Image file (optional)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Instructor updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Instructor updated successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Instructor not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Instructors"
+                ],
+                "summary": "Delete an instructor",
+                "operationId": "beee8d1d0618ef579f4b09c537f49891",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Instructor ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Instructor deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Instructor deleted successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Instructor not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/reviews": {
             "get": {
                 "tags": [
@@ -1358,7 +1756,7 @@
                 "tags": [
                     "Users"
                 ],
-                "summary": "Update user status (active/inactive)",
+                "summary": "Toggle user status (active <-> inactive)",
                 "operationId": "878a90d0ee38821eb314ec3bf8e43d01",
                 "parameters": [
                     {
@@ -1372,29 +1770,6 @@
                         }
                     }
                 ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "status"
-                                ],
-                                "properties": {
-                                    "status": {
-                                        "type": "string",
-                                        "enum": [
-                                            "active",
-                                            "inactive"
-                                        ],
-                                        "example": "active"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
                 "responses": {
                     "200": {
                         "description": "User status updated successfully",
@@ -1571,6 +1946,10 @@
         {
             "name": "Blogs",
             "description": "Blogs"
+        },
+        {
+            "name": "Instructors",
+            "description": "Instructors"
         },
         {
             "name": "Reviews",

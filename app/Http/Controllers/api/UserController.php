@@ -161,7 +161,7 @@ class UserController extends Controller
     {
         $validatedData = $request->validate([
             'current_password' => 'required',
-            'new_password' => 'required|string|min:8|confirmed',
+            'new_password' => 'required|string|min:8',
         ]);
 
         $user = $request->user();
@@ -185,7 +185,7 @@ class UserController extends Controller
 
     #[OA\Post(
         path: "/users/{id}/status",
-        summary: "Update user status (active/inactive)",
+        summary: "Toggle user status (active <-> inactive)",
         tags: ["Users"],
         security: [["bearerAuth" => []]],
         parameters: [
@@ -197,18 +197,6 @@ class UserController extends Controller
                 schema: new OA\Schema(type: "integer", example: 1)
             )
         ],
-        requestBody: new OA\RequestBody(
-            required: true,
-            content: new OA\MediaType(
-                mediaType: "application/json",
-                schema: new OA\Schema(
-                    required: ["status"],
-                    properties: [
-                        new OA\Property(property: "status", type: "string", enum: ["active", "inactive"], example: "active")
-                    ]
-                )
-            )
-        ),
         responses: [
             new OA\Response(
                 response: 200,
@@ -260,10 +248,6 @@ class UserController extends Controller
     )]
     public function updateStatus(Request $request, $id)
     {
-        $validatedData = $request->validate([
-            'status' => 'required|string|in:active,inactive',
-        ]);
-
         $user = \App\Models\User::find($id);
         if (!$user) {
             return response()->json([
@@ -271,13 +255,15 @@ class UserController extends Controller
                 'message' => 'User not found',
             ], 404);
         }
-
-        $user->status = $validatedData['status'];
+        
+        // Toggle status: active -> inactive, inactive -> active
+        $user->status = $user->status === 'active' ? 'inactive' : 'active';
         $user->save();
 
         return response()->json([
             'status' => true,
-            'message' => 'User status updated successfully',
+            'message' => 'Status updated!',
+            'new_status' => $user->status,
         ]);
     }
    
