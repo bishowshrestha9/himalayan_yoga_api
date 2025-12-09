@@ -34,6 +34,7 @@ return [
             'https://127.0.0.1:3000',
             'http://209.126.86.149:3002',
             'https://209.126.86.149:3002',
+            'https://kirsten-vaulted-margarita.ngrok-free.dev'
         ],
 
     // Do NOT use patterns when credentials are enabled

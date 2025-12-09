@@ -30,7 +30,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Admin-only blog management
     Route::prefix('blogs')->middleware('admin')->group(function () {
         Route::post('/', [BlogsController::class, 'store']);
-        Route::put('/{id}', [BlogsController::class, 'update']);
+        Route::post('/{id}', [BlogsController::class, 'update']); // Use POST for file uploads
         Route::delete('/{id}', [BlogsController::class, 'destroy']);
     });
     

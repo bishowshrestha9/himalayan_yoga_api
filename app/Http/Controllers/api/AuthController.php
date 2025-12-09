@@ -103,18 +103,17 @@ class AuthController extends Controller
             'status' => true,   
             'message' => 'Login successful',
             'token' => $token, // Include token as fallback
-        ], 200);
-        // ], 200)->cookie(
-        //     'auth_token',           // Cookie name
-        //     $token,                 // Token value
-        //     60 * 24 * 7,            // 7 days expiration (in minutes)
-        //     '/',                     // Path (available to all paths)
-        //     $domain,                // Domain: null for localhost
-        //     $secure,                // Secure flag
-        //     true,                    // HttpOnly (not accessible via JavaScript)
-        //     false,                   // Raw (false = URL encode)
-        //     $sameSite               // SameSite setting
-        // );
+        ], 200)->cookie(
+            'auth_token',           // Cookie name
+            $token,                 // Token value
+            60 * 24 * 7,            // 7 days expiration (in minutes)
+            '/',                     // Path (available to all paths)
+            $domain,                // Domain: null for localhost
+            $secure,                // Secure flag
+            true,                    // HttpOnly (not accessible via JavaScript)
+            false,                   // Raw (false = URL encode)
+            $sameSite               // SameSite setting
+        );
         
         return $response;
     }
@@ -154,60 +153,13 @@ class AuthController extends Controller
         ]
     )]
     public function logout(Request $request)
-    {
-        // With auth:sanctum middleware, user is already authenticated
-        $user = $request->user();
-        
-        if (!$user) {
-            return response()->json([
-                'message' => 'Unauthenticated'
-            ], 401);
-        }
-        
-        // Delete the current access token
-        // Get the token from the request (either from header or cookie via ReadTokenFromCookie)
-        $token = $request->bearerToken();
-        
-        if ($token) {
-            $tokenModel = PersonalAccessToken::findToken($token);
-            if ($tokenModel) {
-                $tokenModel->delete();
-            }
-        } else {
-            // Fallback: delete all tokens for the user (if token not found)
-            $user->tokens()->delete();
-        }
-        
-        // Clear cookie with same settings as login
-        $origin = $request->header('Origin');
-        $isCrossOrigin = $origin && $origin !== $request->getSchemeAndHttpHost();
-        $isHttps = $request->isSecure() || str_starts_with(config('app.url'), 'https://');
-        
-        // Match cookie settings with login
-        if ($isCrossOrigin) {
-            $sameSite = 'none';
-            $secure = true;
-        } else {
-            $sameSite = 'lax';
-            $secure = $isHttps;
-        }
-        $domain = null;
-        
-        $cookie = cookie(
-            'auth_token',
-            '',
-            -1, // Expire immediately
-            '/',
-            $domain,
-            $secure,
-            true,
-            false,
-            $sameSite
-        );
-        
-        return response()->json([
-            'status' => true,
-            'message' => 'Logout successful'
-        ], 200)->cookie($cookie);
+    
+        {
+    $request->user()->currentAccessToken()->delete();
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Logged out'
+    ]); 
     }
 }

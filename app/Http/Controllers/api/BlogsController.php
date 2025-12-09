@@ -130,11 +130,6 @@ class BlogsController extends Controller
             
             // Handle image upload
             if ($request->hasFile('image')) {
-                // Delete old image if it exists
-                if ($blog->image && Storage::disk('public')->exists($blog->image)) {
-                    Storage::disk('public')->delete($blog->image);
-                }
-                
                 $image = $request->file('image');
                 
                 // Store in temp directory first
@@ -263,7 +258,7 @@ class BlogsController extends Controller
         }
     }
 
-    #[OA\Put(
+    #[OA\Post(
         path: "/blogs/{id}",
         summary: "Update a blog",
         tags: ["Blogs"],
