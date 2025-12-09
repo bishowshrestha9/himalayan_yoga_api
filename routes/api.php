@@ -20,6 +20,7 @@ Route::group(['prefix' => 'blogs'], function () {
 // Public review submission (no auth required)
 Route::prefix('reviews')->group(function () {
     Route::post('/', [ReviewController::class, 'submitReview']);
+    Route::get('/publishable', [ReviewController::class, 'getPublishableReviews']); // Public endpoint for approved reviews
 });
 
 // Protected routes - use Sanctum for authentication

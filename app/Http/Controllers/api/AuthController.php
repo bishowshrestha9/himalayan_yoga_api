@@ -55,6 +55,7 @@ class AuthController extends Controller
         
         if (!Auth::attempt($request->only('email', 'password'))) {
             return response()->json([
+                'status'   => false,
                 'message' => 'Invalid login details'
             ], 401);
         }
@@ -102,17 +103,18 @@ class AuthController extends Controller
             'status' => true,   
             'message' => 'Login successful',
             'token' => $token, // Include token as fallback
-        ], 200)->cookie(
-            'auth_token',           // Cookie name
-            $token,                 // Token value
-            60 * 24 * 7,            // 7 days expiration (in minutes)
-            '/',                     // Path (available to all paths)
-            $domain,                // Domain: null for localhost
-            $secure,                // Secure flag
-            true,                    // HttpOnly (not accessible via JavaScript)
-            false,                   // Raw (false = URL encode)
-            $sameSite               // SameSite setting
-        );
+        ], 200);
+        // ], 200)->cookie(
+        //     'auth_token',           // Cookie name
+        //     $token,                 // Token value
+        //     60 * 24 * 7,            // 7 days expiration (in minutes)
+        //     '/',                     // Path (available to all paths)
+        //     $domain,                // Domain: null for localhost
+        //     $secure,                // Secure flag
+        //     true,                    // HttpOnly (not accessible via JavaScript)
+        //     false,                   // Raw (false = URL encode)
+        //     $sameSite               // SameSite setting
+        // );
         
         return $response;
     }

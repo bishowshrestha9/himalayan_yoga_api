@@ -220,13 +220,12 @@
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
                                 "required": [
                                     "title",
                                     "description",
                                     "image",
-                                    "excerpt",
                                     "is_active"
                                 ],
                                 "properties": {
@@ -239,8 +238,9 @@
                                         "example": "Blog Description"
                                     },
                                     "image": {
+                                        "description": "Image file (jpeg, jpg, png, gif, webp, max 5MB)",
                                         "type": "string",
-                                        "example": "https://example.com/image.jpg"
+                                        "format": "binary"
                                     },
                                     "excerpt": {
                                         "type": "string",
@@ -474,13 +474,11 @@
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
                                 "required": [
                                     "title",
                                     "description",
-                                    "image",
-                                    "excerpt",
                                     "is_active"
                                 ],
                                 "properties": {
@@ -493,8 +491,9 @@
                                         "example": "Updated Blog Description"
                                     },
                                     "image": {
+                                        "description": "Image file (jpeg, jpg, png, gif, webp, max 5MB) - optional for update",
                                         "type": "string",
-                                        "example": "https://example.com/updated-image.jpg"
+                                        "format": "binary"
                                     },
                                     "excerpt": {
                                         "type": "string",
@@ -872,31 +871,6 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Review created successfully and stored as lead"
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "name": {
-                                                    "type": "string",
-                                                    "example": "John Doe"
-                                                },
-                                                "email": {
-                                                    "type": "string",
-                                                    "example": "john@example.com"
-                                                },
-                                                "review": {
-                                                    "type": "string",
-                                                    "example": "Great service! Highly recommended."
-                                                },
-                                                "rating": {
-                                                    "type": "number",
-                                                    "example": 4.5
-                                                }
-                                            },
-                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -1082,7 +1056,7 @@
                 "tags": [
                     "Reviews"
                 ],
-                "summary": "Get publishable reviews (latest 3 approved reviews)",
+                "summary": "Get publishable reviews (latest 3 approved reviews) - Public endpoint",
                 "operationId": "bb26157ae11a4b65eab1a9b59683dc1e",
                 "responses": {
                     "200": {
@@ -1177,12 +1151,7 @@
                             }
                         }
                     }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
+                }
             }
         }
     },

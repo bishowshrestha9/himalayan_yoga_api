@@ -130,6 +130,11 @@ class BlogsController extends Controller
             
             // Handle image upload
             if ($request->hasFile('image')) {
+                // Delete old image if it exists
+                if ($blog->image && Storage::disk('public')->exists($blog->image)) {
+                    Storage::disk('public')->delete($blog->image);
+                }
+                
                 $image = $request->file('image');
                 
                 // Store in temp directory first
@@ -143,7 +148,7 @@ class BlogsController extends Controller
                 $permanentPath = 'blogs/' . $filename;
                 Storage::disk('public')->move($tempPath, $permanentPath);
                 
-                // Store the path in database (relative to storage/app/public)
+                // Store the path in database
                 $data['image'] = $permanentPath;
             }
             
@@ -152,10 +157,6 @@ class BlogsController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => 'Blog created successfully',
-                'data' => [
-                    'id' => $blog->id,
-                    'image_url' => asset('storage/' . $blog->image),
-                ],
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
@@ -396,10 +397,6 @@ class BlogsController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => 'Blog updated successfully',
-                'data' => [
-                    'id' => $blog->id,
-                    'image_url' => asset('storage/' . $blog->image),
-                ],
             ], 200);
         } catch (\Exception $e) {
             return response()->json([

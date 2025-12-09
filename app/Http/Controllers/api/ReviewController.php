@@ -8,6 +8,7 @@ use App\Http\Requests\ReviewsRequest;
 use App\Models\Reviews;
 use App\Models\Lead;
 use OpenApi\Attributes as OA;
+//only send status and message in response 
 
 class ReviewController extends Controller
 {
@@ -40,18 +41,7 @@ class ReviewController extends Controller
                     schema: new OA\Schema(
                         properties: [
                             new OA\Property(property: "status", type: "boolean", example: true),
-                            new OA\Property(property: "message", type: "string", example: "Review created successfully and stored as lead"),
-                            new OA\Property(
-                                property: "data",
-                                type: "object",
-                                properties: [
-                                    new OA\Property(property: "id", type: "integer", example: 1),
-                                    new OA\Property(property: "name", type: "string", example: "John Doe"),
-                                    new OA\Property(property: "email", type: "string", example: "john@example.com"),
-                                    new OA\Property(property: "review", type: "string", example: "Great service! Highly recommended."),
-                                    new OA\Property(property: "rating", type: "number", example: 4.5)
-                                ]
-                            )
+                            new OA\Property(property: "message", type: "string", example: "Review created successfully and stored as lead")
                         ]
                     )
                 )
@@ -113,17 +103,11 @@ class ReviewController extends Controller
                 ],
             ]);
             
-            $data = [
-                'id' => $review->id,
-                'name' => $review->name,
-                'email' => $review->email,
-                'review' => $review->review,
-                'rating' => $review->rating,
-            ];
+   
             return response()->json([
                 'status' => true,
                 'message' => 'Review created successfully and stored as lead',
-                'data' => $data,
+
             ], 201);
         }
         catch (\Exception $e) {
@@ -204,7 +188,7 @@ class ReviewController extends Controller
         try {
             //
             $reviews = Reviews::all();
-            if (!$reviews) {
+            if ($reviews->isEmpty()) {
                 return response()->json([
                     'status' => false,
                     'message' => 'No reviews found',
@@ -239,9 +223,8 @@ class ReviewController extends Controller
 
     #[OA\Get(
         path: "/reviews/publishable",
-        summary: "Get publishable reviews (latest 3 approved reviews)",
+        summary: "Get publishable reviews (latest 3 approved reviews) - Public endpoint",
         tags: ["Reviews"],
-        security: [["bearerAuth" => []]],
         responses: [
             new OA\Response(
                 response: 200,
@@ -303,7 +286,7 @@ class ReviewController extends Controller
     {
         try {
             $reviews = Reviews::where('status', true)->orderBy('created_at', 'desc')->take(3)->get();
-            if (!$reviews) {
+            if ($reviews->isEmpty()) {
                 return response()->json([
                     'status' => false,
                     'message' => 'No publishable reviews found',
