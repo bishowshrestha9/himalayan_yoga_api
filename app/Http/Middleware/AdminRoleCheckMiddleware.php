@@ -41,13 +41,13 @@ class AdminRoleCheckMiddleware
         }
 
         // Check if user has admin role
-        if ($user->role !== 'admin') {
+        if ($user->role !== 'admin' && $user->role !== 'super_admin') {
             return response()->json([
                 'status' => false,
                 'message' => 'You are not authorized to access this resource',
                 'debug' => [
                     'user_role' => $user->role,
-                    'required_role' => 'admin',
+                    'required_role' => 'admin or super_admin',
                 ],
             ], 403);
         }

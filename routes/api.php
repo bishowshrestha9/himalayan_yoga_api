@@ -8,6 +8,8 @@ use App\Http\Middleware\AdminRoleCheckMiddleware;
 use App\Http\Middleware\SuperAdminMiddleware;
 use App\Http\Controllers\api\UserController;
 use App\Http\Controllers\api\InstructorController;
+use App\Http\Controllers\api\ServiceController;
+use App\Http\Controllers\api\InquiryController;
 
 
 // Public routes
@@ -26,11 +28,20 @@ Route::group(['prefix' => 'instructors'], function () {
     Route::get('/{id}', [InstructorController::class, 'show']);
 });
 
+// Public service routes
+Route::group(['prefix' => 'services'], function () {
+    Route::get('/', [ServiceController::class, 'index']);
+    Route::get('/{id}', [ServiceController::class, 'show']);
+});
+
 // Public review submission (no auth required)
 Route::prefix('reviews')->group(function () {
     Route::post('/', [ReviewController::class, 'submitReview']);
     Route::get('/publishable', [ReviewController::class, 'getPublishableReviews']); // Public endpoint for approved reviews
 });
+
+// Public inquiry submission (no auth required)
+Route::post('/inquiries', [InquiryController::class, 'store']);
 
 // Protected routes - use Sanctum for authentication
 Route::middleware('auth:sanctum')->group(function () {
@@ -55,6 +66,21 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/', [InstructorController::class, 'store']);
         Route::post('/{id}', [InstructorController::class, 'update']); // Use POST for file uploads
         Route::delete('/{id}', [InstructorController::class, 'destroy']);
+    });
+    
+    // Admin-only service management
+    Route::prefix('services')->middleware('admin')->group(function () {
+        Route::post('/', [ServiceController::class, 'store']);
+        Route::post('/{id}', [ServiceController::class, 'update']); // Use POST for file uploads
+        Route::post('/{id}/toggle-status', [ServiceController::class, 'toggleStatus']);
+        Route::delete('/{id}', [ServiceController::class, 'destroy']);
+    });
+    
+    // Admin-only inquiry management
+    Route::prefix('inquiries')->middleware('admin')->group(function () {
+        Route::get('/', [InquiryController::class, 'index']);
+        Route::get('/{id}', [InquiryController::class, 'show']);
+        Route::delete('/{id}', [InquiryController::class, 'destroy']);
     });
 });
 

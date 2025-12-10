@@ -1,0 +1,301 @@
+<?php
+
+namespace App\Http\Controllers\api;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use App\Models\Inquiry;
+use App\Models\Service;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
+use App\Http\Requests\InquiryRequest;
+use OpenApi\Attributes as OA;
+
+class InquiryController extends Controller
+{
+    #[OA\Get(
+        path: "/inquiries",
+        summary: "Get all inquiries",
+        tags: ["Inquiries"],
+        security: [["bearerAuth" => []]],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Inquiries fetched successfully",
+                content: new OA\MediaType(
+                    mediaType: "application/json",
+                    schema: new OA\Schema(
+                        properties: [
+                            new OA\Property(property: "status", type: "boolean", example: true),
+                            new OA\Property(property: "message", type: "string", example: "Inquiries fetched successfully"),
+                            new OA\Property(
+                                property: "data",
+                                type: "array",
+                                items: new OA\Items(
+                                    type: "object",
+                                    properties: [
+                                        new OA\Property(property: "id", type: "integer", example: 1),
+                                        new OA\Property(property: "name", type: "string", example: "John Doe"),
+                                        new OA\Property(property: "email", type: "string", example: "john@example.com"),
+                                        new OA\Property(property: "phone", type: "string", example: "+1234567890"),
+                                        new OA\Property(property: "message", type: "string", example: "I'm interested in your yoga classes"),
+                                        new OA\Property(property: "service_name", type: "string", example: "Hatha Yoga"),
+                                        new OA\Property(property: "created_at", type: "string", format: "date-time")
+                                    ]
+                                )
+                            )
+                        ]
+                    )
+                )
+            ),
+            new OA\Response(response: 404, description: "No inquiries found")
+        ]
+    )]
+    public function index()
+    {
+        try {
+            $inquiries = Inquiry::with('service')->orderBy('created_at', 'desc')->get();
+            
+            if ($inquiries->isEmpty()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'No inquiries found',
+                ], 404);
+            }
+            
+            $inquiries->transform(function ($inquiry) {
+                // Replace service object with just the name
+                $inquiry->service_name = $inquiry->service ? $inquiry->service->title : null;
+                unset($inquiry->service);
+                unset($inquiry->service_id);
+                unset($inquiry->updated_at);
+                
+                return $inquiry;
+            });
+            
+            return response()->json([
+                'status' => true,
+                'message' => 'Inquiries fetched successfully',
+                'data' => $inquiries,
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch inquiries', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to fetch inquiries',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    #[OA\Post(
+        path: "/inquiries",
+        summary: "Create a new inquiry",
+        tags: ["Inquiries"],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: "application/json",
+                schema: new OA\Schema(
+                    required: ["name", "email", "phone", "message"],
+                    properties: [
+                        new OA\Property(property: "name", type: "string", example: "John Doe"),
+                        new OA\Property(property: "email", type: "string", format: "email", example: "john@example.com"),
+                        new OA\Property(property: "phone", type: "string", example: "+1234567890"),
+                        new OA\Property(property: "message", type: "string", example: "I'm interested in your yoga classes"),
+                        new OA\Property(property: "service_id", type: "integer", example: 1, description: "Optional service ID")
+                    ]
+                )
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: "Inquiry created successfully",
+                content: new OA\MediaType(
+                    mediaType: "application/json",
+                    schema: new OA\Schema(
+                        properties: [
+                            new OA\Property(property: "status", type: "boolean", example: true),
+                            new OA\Property(property: "message", type: "string", example: "Inquiry submitted successfully")
+                        ]
+                    )
+                )
+            ),
+            new OA\Response(response: 422, description: "Validation error"),
+            new OA\Response(response: 500, description: "Failed to create inquiry")
+        ]
+    )]
+    public function store(InquiryRequest $request)
+    {
+        try {
+            $validated = $request->validated();
+      
+
+            Inquiry::create($validated);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Inquiry submitted successfully',
+            ], 201);
+        } catch (\Exception $e) {
+            Log::error('Failed to create inquiry', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'data' => $request->all()
+            ]);
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to submit inquiry',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    #[OA\Get(
+        path: "/inquiries/{id}",
+        summary: "Get an inquiry by ID",
+        tags: ["Inquiries"],
+        security: [["bearerAuth" => []]],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                description: "Inquiry ID",
+                schema: new OA\Schema(type: "integer", example: 1)
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Inquiry fetched successfully",
+                content: new OA\MediaType(
+                    mediaType: "application/json",
+                    schema: new OA\Schema(
+                        properties: [
+                            new OA\Property(property: "status", type: "boolean", example: true),
+                            new OA\Property(property: "message", type: "string", example: "Inquiry fetched successfully"),
+                            new OA\Property(
+                                property: "data",
+                                type: "object",
+                                properties: [
+                                    new OA\Property(property: "id", type: "integer", example: 1),
+                                    new OA\Property(property: "name", type: "string"),
+                                    new OA\Property(property: "email", type: "string"),
+                                    new OA\Property(property: "phone", type: "string"),
+                                    new OA\Property(property: "message", type: "string"),
+                                    new OA\Property(property: "service_name", type: "string"),
+                                    new OA\Property(property: "created_at", type: "string", format: "date-time")
+                                ]
+                            )
+                        ]
+                    )
+                )
+            ),
+            new OA\Response(response: 404, description: "Inquiry not found")
+        ]
+    )]
+    public function show($id)
+    {
+        try {
+            $inquiry = Inquiry::with('service')->find($id);
+            
+            if (!$inquiry) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Inquiry not found',
+                ], 404);
+            }
+            
+            // Replace service object with just the name
+            $inquiry->service_name = $inquiry->service ? $inquiry->service->title : null;
+            unset($inquiry->service);
+            unset($inquiry->service_id);
+            unset($inquiry->updated_at);
+            
+            return response()->json([
+                'status' => true,
+                'message' => 'Inquiry fetched successfully',
+                'data' => $inquiry,
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch inquiry', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'inquiry_id' => $id
+            ]);
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to fetch inquiry',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    #[OA\Delete(
+        path: "/inquiries/{id}",
+        summary: "Delete an inquiry",
+        tags: ["Inquiries"],
+        security: [["bearerAuth" => []]],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                description: "Inquiry ID",
+                schema: new OA\Schema(type: "integer", example: 1)
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Inquiry deleted successfully",
+                content: new OA\MediaType(
+                    mediaType: "application/json",
+                    schema: new OA\Schema(
+                        properties: [
+                            new OA\Property(property: "status", type: "boolean", example: true),
+                            new OA\Property(property: "message", type: "string", example: "Inquiry deleted successfully")
+                        ]
+                    )
+                )
+            ),
+            new OA\Response(response: 404, description: "Inquiry not found")
+        ]
+    )]
+    public function destroy($id)
+    {
+        try {
+            $inquiry = Inquiry::find($id);
+            
+            if (!$inquiry) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Inquiry not found',
+                ], 404);
+            }
+
+            $inquiry->delete();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Inquiry deleted successfully',
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Failed to delete inquiry', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'inquiry_id' => $id
+            ]);
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to delete inquiry',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+}

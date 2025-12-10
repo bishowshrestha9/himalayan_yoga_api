@@ -6,6 +6,7 @@ use App\Http\Requests\InstructorRequest;
 use Illuminate\Http\Request;
 use App\Models\Instructor;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use OpenApi\Attributes as OA;
 
@@ -84,6 +85,10 @@ class InstructorController extends Controller
                 'data' => $instructors,
             ], 200);
         } catch (\Exception $e) {
+            Log::error('Failed to fetch instructors', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to fetch instructors',
@@ -155,12 +160,18 @@ class InstructorController extends Controller
             }
             
             Instructor::create($validatedData);
+           
             
             return response()->json([
                 'status' => true,
                 'message' => 'Instructor created successfully',
             ], 201);
         } catch (\Exception $e) {
+            Log::error('Failed to create instructor', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'data' => $request->except(['image'])
+            ]);
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to create instructor',
@@ -232,6 +243,11 @@ class InstructorController extends Controller
                 'data' => $instructor,
             ], 200);
         } catch (\Exception $e) {
+            Log::error('Failed to fetch instructor', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'instructor_id' => $id
+            ]);
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to fetch instructor',
@@ -330,6 +346,12 @@ class InstructorController extends Controller
                 'message' => 'Instructor updated successfully',
             ], 200);
         } catch (\Exception $e) {
+            Log::error('Failed to update instructor', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'instructor_id' => $id,
+                'data' => $request->except(['image'])
+            ]);
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to update instructor',
@@ -392,6 +414,11 @@ class InstructorController extends Controller
                 'message' => 'Instructor deleted successfully',
             ], 200);
         } catch (\Exception $e) {
+            Log::error('Failed to delete instructor', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'instructor_id' => $id
+            ]);
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to delete instructor',

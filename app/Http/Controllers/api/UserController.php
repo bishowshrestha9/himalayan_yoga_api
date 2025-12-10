@@ -79,7 +79,7 @@ class UserController extends Controller
         $user->save();
 
         // Here, you would typically send the password to the admin via email.
-        //Mail::to($user->email)->send(new \App\Mail\AdminCredentialsMail($user->email, $randomPassword));
+        Mail::to($user->email)->send(new \App\Mail\AdminCredentialsMail($user->email, $randomPassword));
 
         return response()->json([
             'status' => true,
