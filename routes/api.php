@@ -89,7 +89,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('users')->middleware('admin')->group(function () {
         Route::post('/admin', [UserController::class, 'addAdmin']);
         Route::post('/{id}/status', [UserController::class, 'updateStatus']);
-        Route::get('/admins', [UserController::class, 'getAdmins']);
+       
     });
     
     // Admin-only booking management
@@ -106,4 +106,9 @@ Route::middleware('auth:sanctum')->group(function () {
 // Public booking creation - rate limited
 Route::post('/bookings', [BookingController::class, 'store'])->middleware('throttle:3,1'); // 3 bookings per minute
 Route::get('/service/idname', [ServiceController::class, 'getServiceIdAndName']);
+
+
+//only super admin can access this route
+Route::get('/users/admins', [UserController::class, 'getAdmins'])->middleware('auth:sanctum', 'super_admin');
+
 

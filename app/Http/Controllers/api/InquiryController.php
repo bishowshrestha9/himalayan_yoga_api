@@ -143,6 +143,8 @@ class InquiryController extends Controller
                 'status' => true,
                 'message' => 'Inquiry submitted successfully',
             ], 201);
+
+
         } catch (\Exception $e) {
             Log::error('Failed to create inquiry', [
                 'error' => $e->getMessage(),
