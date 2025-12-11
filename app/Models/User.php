@@ -24,7 +24,8 @@ class User extends Authenticatable
         'password',
         'role',
         'status',
-        
+        'login_attempts',
+        'locked_until',
     ];
 
     /**

@@ -26,6 +26,7 @@ class ReviewController extends Controller
                         new OA\Property(property: "name", type: "string", example: "John Doe"),
                         new OA\Property(property: "email", type: "string", format: "email", example: "john@example.com"),
                         new OA\Property(property: "review", type: "string", example: "Great service! Highly recommended."),
+                        new OA\Property(property: "service_id", type: "integer", example: 1, nullable: true),
                         new OA\Property(property: "rating", type: "number", format: "float", minimum: 1, maximum: 5, example: 4.5),
                         new OA\Property(property: "status", type: "boolean", example: true)
                     ]
@@ -146,7 +147,8 @@ class ReviewController extends Controller
                                         new OA\Property(property: "email", type: "string", example: "john@example.com"),
                                         new OA\Property(property: "review", type: "string", example: "Great service! Highly recommended."),
                                         new OA\Property(property: "rating", type: "number", example: 4.5),
-                                        new OA\Property(property: "status", type: "boolean", example: true)
+                                        new OA\Property(property: "status", type: "boolean", example: true),
+                                        new OA\Property(property: "service_name", type: "string", example: "Hatha Yoga", nullable: true)
                                     ]
                                 )
                             )
@@ -187,7 +189,7 @@ class ReviewController extends Controller
     {
         try {
             //
-            $reviews = Reviews::all();
+            $reviews = Reviews::with('service')->get();
             if ($reviews->isEmpty()) {
                 return response()->json([
                     'status' => false,
@@ -203,6 +205,8 @@ class ReviewController extends Controller
                     'review' => $review->review,
                     'rating' => $review->rating,
                     'status' => $review->status,
+                    'service' => $review->service ? $review->service->title : null,
+                    'created_at' => $review->created_at->toDateString(),
                 ];
             }
             return response()->json([
@@ -245,7 +249,8 @@ class ReviewController extends Controller
                                         new OA\Property(property: "name", type: "string", example: "John Doe"),
                                         new OA\Property(property: "email", type: "string", example: "john@example.com"),
                                         new OA\Property(property: "review", type: "string", example: "Great service! Highly recommended."),
-                                        new OA\Property(property: "rating", type: "number", example: 4.5)
+                                        new OA\Property(property: "rating", type: "number", example: 4.5),
+                                        new OA\Property(property: "service_name", type: "string", example: "Hatha Yoga", nullable: true)
                                     ]
                                 )
                             )
@@ -285,7 +290,7 @@ class ReviewController extends Controller
     public function getPublishableReviews()
     {
         try {
-            $reviews = Reviews::where('status', true)->orderBy('created_at', 'desc')->take(3)->get();
+            $reviews = Reviews::with('service')->where('status', true)->orderBy('created_at', 'desc')->take(3)->get();
             if ($reviews->isEmpty()) {
                 return response()->json([
                     'status' => false,
@@ -300,6 +305,8 @@ class ReviewController extends Controller
                     'email' => $review->email,
                     'review' => $review->review,
                     'rating' => $review->rating,
+                    'service' => $review->service ? $review->service->title : null,
+                    'created_at' => $review->created_at->toDateString(),
                 ];
             }
             return response()->json([
@@ -318,32 +325,23 @@ class ReviewController extends Controller
     }
 
     #[OA\Delete(
-        path: "/reviews",
-        summary: "Delete multiple reviews at once",
+        path: "/reviews/{id}",
+        summary: "Delete a single review by ID",
         tags: ["Reviews"],
         security: [["bearerAuth" => []]],
-        requestBody: new OA\RequestBody(
-            required: true,
-            content: new OA\MediaType(
-                mediaType: "application/json",
-                schema: new OA\Schema(
-                    required: ["ids"],
-                    properties: [
-                        new OA\Property(
-                            property: "ids",
-                            type: "array",
-                            items: new OA\Items(type: "integer"),
-                            example: [1, 2, 3],
-                            description: "Array of review IDs to delete"
-                        )
-                    ]
-                )
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                description: "The ID of the review to delete",
+                schema: new OA\Schema(type: "integer", example: 1)
             )
-        ),
+        ],
         responses: [
             new OA\Response(
                 response: 200,
-                description: "Reviews deleted successfully",
+                description: "Review deleted successfully",
                 content: new OA\MediaType(
                     mediaType: "application/json",
                     schema: new OA\Schema(
@@ -368,20 +366,20 @@ class ReviewController extends Controller
             ),
             new OA\Response(
                 response: 404,
-                description: "No reviews found",
+                description: "Review not found",
                 content: new OA\MediaType(
                     mediaType: "application/json",
                     schema: new OA\Schema(
                         properties: [
                             new OA\Property(property: "status", type: "boolean", example: false),
-                            new OA\Property(property: "message", type: "string", example: "No reviews found")
+                            new OA\Property(property: "message", type: "string", example: "Review not found")
                         ]
                     )
                 )
             ),
             new OA\Response(
                 response: 500,
-                description: "Failed to delete reviews",
+                description: "Failed to delete review",
                 content: new OA\MediaType(
                     mediaType: "application/json",
                     schema: new OA\Schema(
@@ -395,16 +393,11 @@ class ReviewController extends Controller
             )
         ]
     )]
-    public function deleteMultipleReviews(Request $request)
+    public function delete($id)
     {
         try {
-            $reviews = Reviews::whereIn('id', $request->ids)->delete();
-            if (!$reviews) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'No reviews found',
-                ], 404);
-            }
+            $review= Reviews::where('id', $id)->delete();
+           
             
             
             return response()->json([
@@ -416,6 +409,33 @@ class ReviewController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to delete reviews',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+
+    public function approveReview($id)
+    {
+        try {
+            $review = Reviews::find($id);
+            if (!$review) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Review not found',
+                ], 404);
+            }
+            $review->status = true;
+            $review->save();
+            return response()->json([
+                'status' => true,
+                'message' => 'Review approved successfully',
+            ], 200);
+        }
+        catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to approve review',
                 'error' => $e->getMessage(),
             ], 500);
         }

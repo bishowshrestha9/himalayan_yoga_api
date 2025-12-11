@@ -79,7 +79,7 @@ class UserController extends Controller
         $user->save();
 
         // Here, you would typically send the password to the admin via email.
-        Mail::to($user->email)->send(new \App\Mail\AdminCredentialsMail($user->email, $randomPassword));
+        Mail::to($user->email)->send(new \App\Mail\AdminAddedMail($user->name, $user->email, $randomPassword));
 
         return response()->json([
             'status' => true,
@@ -161,7 +161,16 @@ class UserController extends Controller
     {
         $validatedData = $request->validate([
             'current_password' => 'required',
-            'new_password' => 'required|string|min:8',
+            'new_password' => [
+                'required',
+                'string',
+                'min:8',
+                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/',
+                'confirmed'
+            ],
+        ], [
+            'new_password.regex' => 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.',
+            'new_password.confirmed' => 'The password confirmation does not match.'
         ]);
 
         $user = $request->user();

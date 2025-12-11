@@ -53,14 +53,58 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
         
-        if (!Auth::attempt($request->only('email', 'password'))) {
+        $user = User::where('email', $request->email)->first();
+        
+        if (!$user) {
             return response()->json([
-                'status'   => false,
+                'status' => false,
                 'message' => 'Invalid login details'
             ], 401);
         }
         
-        $user = User::where('email', $request->email)->firstOrFail();
+        // Check if account is locked
+        if ($user->locked_until && now()->lessThan($user->locked_until)) {
+            $minutesLeft = now()->diffInMinutes($user->locked_until);
+            return response()->json([
+                'status' => false,
+                'message' => "Account is locked due to too many failed login attempts. Try again in {$minutesLeft} minutes."
+            ], 423); // 423 Locked
+        }
+        
+        // Reset lock if time has passed
+        if ($user->locked_until && now()->greaterThanOrEqualTo($user->locked_until)) {
+            $user->login_attempts = 0;
+            $user->locked_until = null;
+            $user->save();
+        }
+        
+        if (!Auth::attempt($request->only('email', 'password'))) {
+            // Increment failed login attempts
+            $user->increment('login_attempts');
+            
+            // Lock account after 5 failed attempts for 15 minutes
+            if ($user->login_attempts >= 5) {
+                $user->locked_until = now()->addMinutes(15);
+                $user->save();
+                
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Account locked due to too many failed login attempts. Try again in 15 minutes.'
+                ], 423);
+            }
+            
+            $attemptsLeft = 5 - $user->login_attempts;
+            return response()->json([
+                'status' => false,
+                'message' => "Invalid login details. {$attemptsLeft} attempts remaining before account lockout."
+            ], 401);
+        }
+        
+        // Reset login attempts on successful login
+        $user->login_attempts = 0;
+        $user->locked_until = null;
+        $user->save();
+        
         $token = $user->createToken('auth_token')->plainTextToken;
         
         // Detect environment for cookie settings

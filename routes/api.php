@@ -10,11 +10,12 @@ use App\Http\Controllers\api\UserController;
 use App\Http\Controllers\api\InstructorController;
 use App\Http\Controllers\api\ServiceController;
 use App\Http\Controllers\api\InquiryController;
+use App\Http\Controllers\api\BookingController;
 
 
-// Public routes
+// Public routes with rate limiting
 Route::group(['prefix' => 'auth'], function () {
-    Route::post('login', [AuthController::class, 'login']);
+    Route::post('login', [AuthController::class, 'login'])->middleware('throttle:5,1'); // 5 attempts per minute
 });
 
 Route::group(['prefix' => 'blogs'], function () {
@@ -34,14 +35,14 @@ Route::group(['prefix' => 'services'], function () {
     Route::get('/{id}', [ServiceController::class, 'show']);
 });
 
-// Public review submission (no auth required)
+// Public review submission (no auth required) - rate limited
 Route::prefix('reviews')->group(function () {
-    Route::post('/', [ReviewController::class, 'submitReview']);
-    Route::get('/publishable', [ReviewController::class, 'getPublishableReviews']); // Public endpoint for approved reviews
+    Route::post('/', [ReviewController::class, 'submitReview'])->middleware('throttle:3,1'); // 3 reviews per minute
+    Route::get('/publishable', [ReviewController::class, 'getPublishableReviews']);
 });
 
-// Public inquiry submission (no auth required)
-Route::post('/inquiries', [InquiryController::class, 'store']);
+// Public inquiry submission (no auth required) - rate limited
+Route::post('/inquiries', [InquiryController::class, 'store'])->middleware('throttle:5,1'); // 5 inquiries per minute
 
 // Protected routes - use Sanctum for authentication
 Route::middleware('auth:sanctum')->group(function () {
@@ -58,7 +59,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('reviews')->middleware('admin')->group(function () {
         Route::get('/', [ReviewController::class, 'getReviews']);
         Route::get('/publishable', [ReviewController::class, 'getPublishableReviews']);
-        Route::delete('/', [ReviewController::class, 'deleteMultipleReviews']);
+        Route::delete('/{id}', [ReviewController::class, 'delete']);
+        Route::post('/{id}/approve', [ReviewController::class, 'approveReview']);
     });
     
     // Admin-only instructor management
@@ -82,18 +84,26 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{id}', [InquiryController::class, 'show']);
         Route::delete('/{id}', [InquiryController::class, 'destroy']);
     });
+    
+    // Super admin only routes for user management
+    Route::prefix('users')->middleware('admin')->group(function () {
+        Route::post('/admin', [UserController::class, 'addAdmin']);
+        Route::post('/{id}/status', [UserController::class, 'updateStatus']);
+        Route::get('/admins', [UserController::class, 'getAdmins']);
+    });
+    
+    // Admin-only booking management
+    Route::prefix('bookings')->middleware('admin')->group(function () {
+        Route::get('/', [BookingController::class, 'index']);
+        Route::put('/{id}/status', [BookingController::class, 'updateStatus']);
+    });
+    
+    Route::post('users/change-password', [UserController::class, 'changePassword']);
+    
+    Route::get('/user', [AuthController::class, 'me']);
 });
 
-// Super admin only routes for user management
-Route::prefix('users')->middleware(SuperAdminMiddleware::class)->group(function () {
-   Route::post('/admin', [UserController::class, 'addAdmin']);
-   Route::post('/{id}/status', [UserController::class, 'updateStatus']);
-   Route::get('/admins', [UserController::class, 'getAdmins']);
-});
-
-
-Route::post('users/change-password', [UserController::class, 'changePassword'])->middleware('auth:sanctum');
-
-
-Route::get('/user', [AuthController::class, 'me'])->middleware('auth:sanctum');
+// Public booking creation - rate limited
+Route::post('/bookings', [BookingController::class, 'store'])->middleware('throttle:3,1'); // 3 bookings per minute
+Route::get('/service/idname', [ServiceController::class, 'getServiceIdAndName']);
 

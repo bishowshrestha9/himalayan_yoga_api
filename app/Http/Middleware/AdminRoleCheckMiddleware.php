@@ -25,18 +25,9 @@ class AdminRoleCheckMiddleware
         }
         
         if (!$user) {
-            // Check if there's a cookie
-            $token = $request->cookie('auth_token');
-            
             return response()->json([
                 'status' => false,
-                'message' => 'Unauthenticated - User not set',
-                'debug' => [
-                    'has_cookie' => !empty($token),
-                    'request_user' => $request->user() ? 'set' : 'null',
-                    'auth_user' => \Illuminate\Support\Facades\Auth::user() ? 'set' : 'null',
-                    'cookie_preview' => $token ? substr($token, 0, 20) . '...' : 'no cookie',
-                ],
+                'message' => 'Unauthenticated',
             ], 401);
         }
 
@@ -45,10 +36,6 @@ class AdminRoleCheckMiddleware
             return response()->json([
                 'status' => false,
                 'message' => 'You are not authorized to access this resource',
-                'debug' => [
-                    'user_role' => $user->role,
-                    'required_role' => 'admin or super_admin',
-                ],
             ], 403);
         }
 

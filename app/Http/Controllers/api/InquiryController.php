@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\InquiryRequest;
 use OpenApi\Attributes as OA;
+use Illuminate\Support\Facades\Mail;
 
 class InquiryController extends Controller
 {
@@ -136,6 +137,7 @@ class InquiryController extends Controller
       
 
             Inquiry::create($validated);
+            Mail::to(config('mail.inquiry_recipient'))->send(new \App\Mail\NewInquiryNotification($validated));
 
             return response()->json([
                 'status' => true,

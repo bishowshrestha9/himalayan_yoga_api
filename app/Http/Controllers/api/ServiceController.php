@@ -542,5 +542,26 @@ class ServiceController extends Controller
             ], 500);
         }
     }
+
+    public function getServiceIdAndName(){
+        try{
+            $services = Service::select('id', 'title')->get();
+            return response()->json([
+                'status' => true,
+                'data' => $services
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to get service IDs and names', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to get service IDs and names',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }
+
 

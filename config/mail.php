@@ -115,4 +115,16 @@ return [
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Inquiry Notification Recipient
+    |--------------------------------------------------------------------------
+    |
+    | This email address will receive inquiry notifications when customers
+    | submit inquiries through the website.
+    |
+    */
+
+    'inquiry_recipient' => env('INQUIRY_RECIPIENT_EMAIL', env('MAIL_FROM_ADDRESS', 'hello@example.com')),
+
 ];
