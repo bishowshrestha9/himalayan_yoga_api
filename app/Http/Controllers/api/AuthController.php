@@ -62,6 +62,14 @@ class AuthController extends Controller
             ], 401);
         }
         
+        // Check if account status is active
+        if ($user->status !== 'active') {
+            return response()->json([
+                'status' => false,
+                'message' => 'Your account is inactive. Please contact the administrator.'
+            ], 403);
+        }
+        
         // Check if account is locked
         if ($user->locked_until && now()->lessThan($user->locked_until)) {
             $minutesLeft = now()->diffInMinutes($user->locked_until);
