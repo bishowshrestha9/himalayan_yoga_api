@@ -28,11 +28,7 @@ Core capabilities:
 - SEO metadata per page (title, description, schema JSON, slug)
 - RESTful API with comprehensive Swagger documentation
 
-## API Documentation
-Once the application is running, you can access the Swagger API documentation at:
-```
-https://himalayan-yogini-api.onrender.com/api/documentation
-```
+
 
 ## Installation
 
