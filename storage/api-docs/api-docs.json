@@ -226,16 +226,21 @@
                                     "title",
                                     "description",
                                     "image",
-                                    "is_active"
+                                    "is_active",
+                                    "slug"
                                 ],
                                 "properties": {
                                     "title": {
                                         "type": "string",
-                                        "example": "Blog Title"
+                                        "example": "Introduction to Himalayan Yoga"
+                                    },
+                                    "subtitle": {
+                                        "type": "string",
+                                        "example": "Ancient Practices for Modern Life"
                                     },
                                     "description": {
                                         "type": "string",
-                                        "example": "Blog Description"
+                                        "example": "Brief overview of the blog"
                                     },
                                     "image": {
                                         "description": "Image file (jpeg, jpg, png, gif, webp, max 5MB)",
@@ -244,7 +249,24 @@
                                     },
                                     "excerpt": {
                                         "type": "string",
-                                        "example": "Blog Excerpt"
+                                        "example": "A short preview text..."
+                                    },
+                                    "author": {
+                                        "type": "string",
+                                        "example": "John Doe"
+                                    },
+                                    "content": {
+                                        "description": "JSON array of objects with heading and paragraph keys",
+                                        "type": "string",
+                                        "example": "[{\"heading\":\"What is Himalayan Yoga?\",\"paragraph\":\"Himalayan Yoga is a profound...\"},{\"heading\":\"Key Benefits\",\"paragraph\":\"Regular practice brings...\"}]"
+                                    },
+                                    "conclusion": {
+                                        "type": "string",
+                                        "example": "Himalayan Yoga offers a complete path to wellness..."
+                                    },
+                                    "slug": {
+                                        "type": "string",
+                                        "example": "introduction-to-himalayan-yoga"
                                     },
                                     "is_active": {
                                         "type": "boolean",
@@ -334,16 +356,16 @@
                 ]
             }
         },
-        "/blogs/{id}": {
+        "/blogs/{title}": {
             "get": {
                 "tags": [
                     "Blogs"
                 ],
-                "summary": "Get a blog by ID",
-                "operationId": "27866628c9d10ffbdac05031e03949dd",
+                "summary": "Get a blog by title",
+                "operationId": "a65cb427bd201ebdcc367f69d685ce5b",
                 "parameters": [
                     {
-                        "name": "id",
+                        "name": "title",
                         "in": "path",
                         "description": "Blog ID",
                         "required": true,
@@ -452,7 +474,9 @@
                         }
                     }
                 }
-            },
+            }
+        },
+        "/blogs/{id}": {
             "post": {
                 "tags": [
                     "Blogs"
@@ -479,12 +503,17 @@
                                 "required": [
                                     "title",
                                     "description",
-                                    "is_active"
+                                    "is_active",
+                                    "slug"
                                 ],
                                 "properties": {
                                     "title": {
                                         "type": "string",
                                         "example": "Updated Blog Title"
+                                    },
+                                    "subtitle": {
+                                        "type": "string",
+                                        "example": "Updated Subtitle"
                                     },
                                     "description": {
                                         "type": "string",
@@ -498,6 +527,23 @@
                                     "excerpt": {
                                         "type": "string",
                                         "example": "Updated Blog Excerpt"
+                                    },
+                                    "author": {
+                                        "type": "string",
+                                        "example": "Jane Doe"
+                                    },
+                                    "content": {
+                                        "description": "JSON array of objects with heading and paragraph keys",
+                                        "type": "string",
+                                        "example": "[{\"heading\":\"Updated Heading\",\"paragraph\":\"Updated paragraph...\"}]"
+                                    },
+                                    "conclusion": {
+                                        "type": "string",
+                                        "example": "Updated conclusion..."
+                                    },
+                                    "slug": {
+                                        "type": "string",
+                                        "example": "updated-blog-title"
                                     },
                                     "is_active": {
                                         "type": "boolean",
@@ -2518,22 +2564,22 @@
                 ]
             }
         },
-        "/services/{id}": {
+        "/services/{slug}": {
             "get": {
                 "tags": [
                     "Services"
                 ],
-                "summary": "Get a service by ID",
-                "operationId": "40f95fd17ca737e43c56fe220a8d0acc",
+                "summary": "Get a service by slug",
+                "operationId": "c64615e4fe96f503ecf3c38dd3d10e84",
                 "parameters": [
                     {
-                        "name": "id",
+                        "name": "slug",
                         "in": "path",
-                        "description": "Service ID",
+                        "description": "Service slug",
                         "required": true,
                         "schema": {
-                            "type": "integer",
-                            "example": 1
+                            "type": "string",
+                            "example": "hatha-yoga"
                         }
                     }
                 ],
@@ -2598,7 +2644,9 @@
                         "description": "Service not found"
                     }
                 }
-            },
+            }
+        },
+        "/services/{id}": {
             "post": {
                 "tags": [
                     "Services"

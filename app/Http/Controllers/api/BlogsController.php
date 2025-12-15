@@ -63,12 +63,22 @@ class BlogsController extends Controller
             content: new OA\MediaType(
                 mediaType: "multipart/form-data",
                 schema: new OA\Schema(
-                    required: ["title", "description", "image", "is_active"],
+                    required: ["title", "description", "image", "is_active", "slug"],
                     properties: [
-                        new OA\Property(property: "title", type: "string", example: "Blog Title"),
-                        new OA\Property(property: "description", type: "string", example: "Blog Description"),
+                        new OA\Property(property: "title", type: "string", example: "Introduction to Himalayan Yoga"),
+                        new OA\Property(property: "subtitle", type: "string", example: "Ancient Practices for Modern Life"),
+                        new OA\Property(property: "description", type: "string", example: "Brief overview of the blog"),
                         new OA\Property(property: "image", type: "string", format: "binary", description: "Image file (jpeg, jpg, png, gif, webp, max 5MB)"),
-                        new OA\Property(property: "excerpt", type: "string", example: "Blog Excerpt"),
+                        new OA\Property(property: "excerpt", type: "string", example: "A short preview text..."),
+                        new OA\Property(property: "author", type: "string", example: "John Doe"),
+                        new OA\Property(
+                            property: "content", 
+                            type: "string", 
+                            example: '[{"heading":"What is Himalayan Yoga?","paragraph":"Himalayan Yoga is a profound..."},{"heading":"Key Benefits","paragraph":"Regular practice brings..."}]',
+                            description: "JSON array of objects with heading and paragraph keys"
+                        ),
+                        new OA\Property(property: "conclusion", type: "string", example: "Himalayan Yoga offers a complete path to wellness..."),
+                        new OA\Property(property: "slug", type: "string", example: "introduction-to-himalayan-yoga"),
                         new OA\Property(property: "is_active", type: "boolean", example: true)
                     ]
                 )
@@ -126,7 +136,7 @@ class BlogsController extends Controller
     )]
     public function store(BlogRequest $request){
         try {
-            $data = $request->only(['title', 'description', 'excerpt', 'is_active']);
+            $data = $request->only(['title', 'subtitle', 'description', 'excerpt', 'author', 'content', 'conclusion', 'is_active', 'slug']);
             
             // Handle image upload
             if ($request->hasFile('image')) {
@@ -163,12 +173,12 @@ class BlogsController extends Controller
     }
 
     #[OA\Get(
-        path: "/blogs/{id}",
-        summary: "Get a blog by ID",
+        path: "/blogs/{title}",
+        summary: "Get a blog by title",
         tags: ["Blogs"],
         parameters: [
             new OA\Parameter(
-                name: "id",
+                name: "title",
                 in: "path",
                 required: true,
                 description: "Blog ID",
@@ -231,9 +241,12 @@ class BlogsController extends Controller
             )
         ]
     )]
-    public function show($id){
+    public function show($title){
         try {
-            $blog = Blogs::find($id);
+            
+            //lower case and space to dash comparison
+            $blog = Blogs::whereRaw('LOWER(REPLACE(title, " ", "-")) = ?', [strtolower($title)])->first();
+
             if (!$blog) {
                 return response()->json([
                     'status' => false,
@@ -277,12 +290,22 @@ class BlogsController extends Controller
             content: new OA\MediaType(
                 mediaType: "multipart/form-data",
                 schema: new OA\Schema(
-                    required: ["title", "description", "is_active"],
+                    required: ["title", "description", "is_active", "slug"],
                     properties: [
                         new OA\Property(property: "title", type: "string", example: "Updated Blog Title"),
+                        new OA\Property(property: "subtitle", type: "string", example: "Updated Subtitle"),
                         new OA\Property(property: "description", type: "string", example: "Updated Blog Description"),
                         new OA\Property(property: "image", type: "string", format: "binary", description: "Image file (jpeg, jpg, png, gif, webp, max 5MB) - optional for update"),
                         new OA\Property(property: "excerpt", type: "string", example: "Updated Blog Excerpt"),
+                        new OA\Property(property: "author", type: "string", example: "Jane Doe"),
+                        new OA\Property(
+                            property: "content", 
+                            type: "string", 
+                            example: '[{"heading":"Updated Heading","paragraph":"Updated paragraph..."}]',
+                            description: "JSON array of objects with heading and paragraph keys"
+                        ),
+                        new OA\Property(property: "conclusion", type: "string", example: "Updated conclusion..."),
+                        new OA\Property(property: "slug", type: "string", example: "updated-blog-title"),
                         new OA\Property(property: "is_active", type: "boolean", example: true)
                     ]
                 )
@@ -361,7 +384,7 @@ class BlogsController extends Controller
                 ], 404);
             }
             
-            $data = $request->only(['title', 'description', 'excerpt', 'is_active']);
+            $data = $request->only(['title', 'subtitle', 'description', 'excerpt', 'author', 'content', 'conclusion', 'is_active', 'slug']);
             
             // Handle image upload if new image is provided
             if ($request->hasFile('image')) {

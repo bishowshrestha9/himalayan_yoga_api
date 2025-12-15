@@ -107,7 +107,7 @@ class ReviewController extends Controller
    
             return response()->json([
                 'status' => true,
-                'message' => 'Review created successfully and stored as lead',
+                'message' => 'Review created successfully',
 
             ], 201);
         }
@@ -436,6 +436,43 @@ class ReviewController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to approve review',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+
+    public function getFourReviews(){
+        try {
+            $reviews = Reviews::with('service')->where('status', true)->orderBy('created_at', 'desc')->take(4)->get();
+            if ($reviews->isEmpty()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'No reviews found',
+                ], 404);
+            }
+            $data = [];
+            foreach ($reviews as $review) {
+                $data[] = [
+                    'id' => $review->id,
+                    'name' => $review->name,
+                    'email' => $review->email,
+                    'review' => $review->review,
+                    'rating' => $review->rating,
+                    'service' => $review->service ? $review->service->title : null,
+                    'created_at' => $review->created_at->toDateString(),
+                ];
+            }
+            return response()->json([
+                'status' => true,
+                'message' => 'Reviews fetched successfully',  
+                'data' => $data,
+            ], 200);
+        }
+        catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to fetch reviews',
                 'error' => $e->getMessage(),
             ], 500);
         }

@@ -30,6 +30,17 @@ class BlogRequest extends FormRequest
                 ]);
             }
         }
+
+        // Convert content JSON string to array if needed
+        if ($this->has('content')) {
+            $content = $this->input('content');
+            if (is_string($content)) {
+                $decoded = json_decode($content, true);
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    $this->merge(['content' => $decoded]);
+                }
+            }
+        }
     }
 
     /**
@@ -44,8 +55,14 @@ class BlogRequest extends FormRequest
         
         $rules = [
             'title' => $isUpdate ? 'sometimes|required|string|max:255' : 'required|string|max:255',
+            'subtitle' => 'nullable|string|max:255',
             'description' => $isUpdate ? 'sometimes|required|string' : 'required|string',
             'excerpt' => 'nullable|string|max:500',
+            'author' => 'nullable|string|max:255',
+            'content' => 'nullable|array',
+            'content.*.heading' => 'required|string',
+            'content.*.paragraph' => 'required|string',
+            'conclusion' => 'nullable|string',
             'is_active' => $isUpdate ? 'sometimes|required|boolean' : 'required|boolean',
             'slug' => $isUpdate ? 'sometimes|required|string|unique:blogs,slug,' . $this->route('id') : 'required|string|unique:blogs,slug',
         ];
@@ -73,6 +90,8 @@ class BlogRequest extends FormRequest
             'image.max' => 'The image may not be greater than 5MB',
             'is_active.required' => 'Status is required',
             'is_active.boolean' => 'Status must be a boolean (true or false)',
+            'content.*.heading.required' => 'Each content section must have a heading',
+            'content.*.paragraph.required' => 'Each content section must have a paragraph',
         ];
     }
 }

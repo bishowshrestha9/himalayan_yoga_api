@@ -200,16 +200,16 @@ class ServiceController extends Controller
     }
 
     #[OA\Get(
-        path: "/services/{id}",
-        summary: "Get a service by ID",
+        path: "/services/{slug}",
+        summary: "Get a service by slug",
         tags: ["Services"],
         parameters: [
             new OA\Parameter(
-                name: "id",
+                name: "slug",
                 in: "path",
                 required: true,
-                description: "Service ID",
-                schema: new OA\Schema(type: "integer", example: 1)
+                description: "Service slug",
+                schema: new OA\Schema(type: "string", example: "hatha-yoga")
             )
         ],
         responses: [
@@ -243,10 +243,10 @@ class ServiceController extends Controller
             new OA\Response(response: 404, description: "Service not found")
         ]
     )]
-    public function show($id)
+    public function show($slug)
     {
         try {
-            $service = Service::with('instructor')->find($id);
+            $service = Service::with('instructor')->where('slug', $slug)->first();
             
             if (!$service) {
                 return response()->json([
@@ -257,7 +257,7 @@ class ServiceController extends Controller
             
             // Convert image paths to full URLs
             $service->image_urls = $service->images ? array_map(function($image) {
-                return asset('storage/' . $image);
+                return url('storage/' . $image);
             }, $service->images) : [];
             
             // Replace instructor object with just the name
@@ -558,6 +558,53 @@ class ServiceController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to get service IDs and names',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+
+
+    public function getTopSixServices()
+    {
+        //latest 
+        try {
+            $services = Service::where('is_active', true)
+                ->with('instructor')
+                ->orderBy('created_at', 'desc')
+                ->take(6)
+                ->get();
+
+            $services->transform(function ($service) {
+                // Convert image paths to full URLs
+                $service->image_urls = $service->images ? array_map(function($image) {
+                    return url('storage/' . $image);
+                }, $service->images) : [];
+
+                // Replace instructor object with just the name
+                $service->instructor_name = $service->instructor ? $service->instructor->name : null;
+                unset($service->instructor);
+
+                // Remove instructor_id and raw images from response
+                unset($service->instructor_id);
+                unset($service->images);
+
+                return $service;
+            });
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Top six services fetched successfully',
+                'data' => $services,
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch top six services', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to fetch top six services',
                 'error' => $e->getMessage(),
             ], 500);
         }

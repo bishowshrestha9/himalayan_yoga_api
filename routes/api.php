@@ -57,7 +57,7 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Admin-only review management
     Route::prefix('reviews')->middleware('admin')->group(function () {
-        Route::get('/', [ReviewController::class, 'getReviews']);
+        
         Route::get('/publishable', [ReviewController::class, 'getPublishableReviews']);
         Route::delete('/{id}', [ReviewController::class, 'delete']);
         Route::post('/{id}/approve', [ReviewController::class, 'approveReview']);
@@ -110,5 +110,12 @@ Route::get('/service/idname', [ServiceController::class, 'getServiceIdAndName'])
 
 //only super admin can access this route
 Route::get('/users/admins', [UserController::class, 'getAdmins'])->middleware('auth:sanctum', 'super_admin');
+
+
+Route::get('/service/top-six', [ServiceController::class, 'getTopSixServices']);
+
+
+Route::get('/reviews/four', [ReviewController::class, 'getFourReviews']);
+Route::get('/reviews', [ReviewController::class, 'getReviews']);
 
 
