@@ -142,38 +142,19 @@ class BlogsController extends Controller
             if ($request->hasFile('image')) {
                 $image = $request->file('image');
                 
-                if (!$image->isValid()) {
-                    return response()->json([
-                        'status' => false,
-                        'message' => 'Invalid image file',
-                    ], 422);
-                }
+                // Store in temp directory first
+                $tempPath = $image->store('temp/blogs', 'public');
                 
-                try {
-                    // Store in temp directory first
-                    $tempPath = $image->store('temp/blogs', 'public');
-                    
-                    // Generate unique filename
-                    $extension = $image->getClientOriginalExtension();
-                    $filename = 'blog_' . time() . '_' . Str::random(10) . '.' . $extension;
-                    
-                    // Move from temp to permanent location
-                    $permanentPath = 'blogs/' . $filename;
-                    Storage::disk('public')->move($tempPath, $permanentPath);
-                    
-                    // Store the path in database
-                    $data['image'] = $permanentPath;
-                } catch (\Exception $e) {
-                    Log::error('Blog image upload failed', [
-                        'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString()
-                    ]);
-                    return response()->json([
-                        'status' => false,
-                        'message' => 'Failed to upload image',
-                        'error' => $e->getMessage(),
-                    ], 500);
-                }
+                // Generate unique filename
+                $extension = $image->getClientOriginalExtension();
+                $filename = 'blog_' . time() . '_' . Str::random(10) . '.' . $extension;
+                
+                // Move from temp to permanent location
+                $permanentPath = 'blogs/' . $filename;
+                Storage::disk('public')->move($tempPath, $permanentPath);
+                
+                // Store the path in database
+                $data['image'] = $permanentPath;
             }
             
             $blog = Blogs::create($data);
@@ -183,10 +164,6 @@ class BlogsController extends Controller
                 'message' => 'Blog created successfully',
             ], 201);
         } catch (\Exception $e) {
-            Log::error('Failed to create blog', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to create blog',
