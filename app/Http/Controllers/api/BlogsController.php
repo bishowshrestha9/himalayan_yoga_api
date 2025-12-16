@@ -35,7 +35,7 @@ class BlogsController extends Controller
             
             // Add full image URL to each blog
             $blogs->transform(function ($blog) {
-                $blog->image_url = $blog->image ? asset('storage/' . $blog->image) : null;
+                $blog->image_url = $blog->image ? url('storage/' . $blog->image) : null;
                 return $blog;
             });
             
@@ -255,7 +255,7 @@ class BlogsController extends Controller
             }
             
             // Add full image URL
-            $blog->image_url = $blog->image ? asset('storage/' . $blog->image) : null;
+            $blog->image_url = $blog->image ? url('storage/' . $blog->image) : null;
             
             return response()->json([
                 'status' => true,
