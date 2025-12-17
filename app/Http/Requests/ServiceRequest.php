@@ -25,7 +25,6 @@ class ServiceRequest extends FormRequest
         
         $rules = [
             'title' => $isUpdate ? 'sometimes|required|string|max:255' : 'required|string|max:255',
-            'slug' => $isUpdate ? 'sometimes|required|string|unique:services,slug,' . $this->route('id') : 'required|string|unique:services,slug',
             'description' => $isUpdate ? 'sometimes|required|string' : 'required|string',
             'yoga_type' => $isUpdate ? 'sometimes|required|in:basic,intermediate,advanced' : 'required|in:basic,intermediate,advanced',
             'benefits' => 'nullable',

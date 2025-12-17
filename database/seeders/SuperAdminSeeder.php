@@ -14,9 +14,9 @@ class SuperAdminSeeder extends Seeder
     {
         \App\Models\User::factory()->create([
             'name' => 'Super Admin',
-            'email' => 'superadmin1@example.com',
+            'email' => 'superadmin@admin.com',
             'role' => 'super_admin',
-            'password' => \Hash::make('12345678'), // Default password
+            'password' => \Hash::make('password'), // Default password
             
         ]);
     }

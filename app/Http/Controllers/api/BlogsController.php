@@ -152,6 +152,8 @@ class BlogsController extends Controller
                 // Move from temp to permanent location
                 $permanentPath = 'blogs/' . $filename;
                 Storage::disk('public')->move($tempPath, $permanentPath);
+
+                Logic::info('Image moved to permanent location: ' . $permanentPath);
                 
                 // Store the path in database
                 $data['image'] = $permanentPath;
