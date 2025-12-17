@@ -53,10 +53,11 @@ class BlogsController extends Controller
                 ]
             ], 200);
         } catch (\Exception $e) {
+            \Log::error($e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to fetch blogs',
-                'error' => $e->getMessage(),
+                // Error logged server-side,
             ], 500);
         }   
     }
@@ -174,10 +175,11 @@ class BlogsController extends Controller
                 'message' => 'Blog created successfully',
             ], 201);
         } catch (\Exception $e) {
+            \Log::error($e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to create blog',
-                'error' => $e->getMessage(),
+                // Error logged server-side,
             ], 500);
         }
     }
@@ -273,10 +275,11 @@ class BlogsController extends Controller
                 'data' => $blog,
             ], 200);
         } catch (\Exception $e) {
+            \Log::error($e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to fetch blog',
-                'error' => $e->getMessage(),
+                // Error logged server-side,
             ], 500);
         }
     }
@@ -427,10 +430,11 @@ class BlogsController extends Controller
                 'message' => 'Blog updated successfully',
             ], 200);
         } catch (\Exception $e) {
+            \Log::error($e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to update blog',
-                'error' => $e->getMessage(),
+                // Error logged server-side,
             ], 500);
         }
     }
@@ -514,10 +518,11 @@ class BlogsController extends Controller
                 'message' => 'Blog deleted successfully',
             ], 200);
         } catch (\Exception $e) {
+            \Log::error($e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to delete blog',
-                'error' => $e->getMessage(),
+                // Error logged server-side,
             ], 500);
         }
     }

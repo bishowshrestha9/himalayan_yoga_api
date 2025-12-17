@@ -85,14 +85,15 @@ class InstructorController extends Controller
                 'data' => $instructors,
             ], 200);
         } catch (\Exception $e) {
+            \Log::error($e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
             Log::error('Failed to fetch instructors', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                // Error logged server-side,
+                
             ]);
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to fetch instructors',
-                'error' => $e->getMessage(),
+                // Error logged server-side,
             ], 500);
         }
     }
@@ -167,15 +168,16 @@ class InstructorController extends Controller
                 'message' => 'Instructor created successfully',
             ], 201);
         } catch (\Exception $e) {
+            \Log::error($e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
             Log::error('Failed to create instructor', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                // Error logged server-side,
+                ,
                 'data' => $request->except(['image'])
             ]);
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to create instructor',
-                'error' => $e->getMessage(),
+                // Error logged server-side,
             ], 500);
         }
     }
@@ -243,15 +245,16 @@ class InstructorController extends Controller
                 'data' => $instructor,
             ], 200);
         } catch (\Exception $e) {
+            \Log::error($e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
             Log::error('Failed to fetch instructor', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                // Error logged server-side,
+                ,
                 'instructor_id' => $id
             ]);
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to fetch instructor',
-                'error' => $e->getMessage(),
+                // Error logged server-side,
             ], 500);
         }
     }
@@ -346,16 +349,17 @@ class InstructorController extends Controller
                 'message' => 'Instructor updated successfully',
             ], 200);
         } catch (\Exception $e) {
+            \Log::error($e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
             Log::error('Failed to update instructor', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                // Error logged server-side,
+                ,
                 'instructor_id' => $id,
                 'data' => $request->except(['image'])
             ]);
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to update instructor',
-                'error' => $e->getMessage(),
+                // Error logged server-side,
             ], 500);
         }
     }
@@ -414,15 +418,16 @@ class InstructorController extends Controller
                 'message' => 'Instructor deleted successfully',
             ], 200);
         } catch (\Exception $e) {
+            \Log::error($e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
             Log::error('Failed to delete instructor', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                // Error logged server-side,
+                ,
                 'instructor_id' => $id
             ]);
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to delete instructor',
-                'error' => $e->getMessage(),
+                // Error logged server-side,
             ], 500);
         }
     }

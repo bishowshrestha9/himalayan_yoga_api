@@ -109,7 +109,7 @@ class BookingController extends Controller
         catch (\Exception $e) {
              return response()->json([
                  'status' => false,
-                 'message' => 'Failed to retrieve bookings: ' . $e->getMessage()
+                 'message' => 'Failed to retrieve bookings: '
         ], 500);
     }
     }
@@ -246,7 +246,7 @@ class BookingController extends Controller
         catch (\Exception $e) {
              return response()->json([
                  'status' => false,
-                 'message' => 'Failed to update booking status: ' . $e->getMessage()
+                 'message' => 'Failed to update booking status: '
         ], 500);
     
         }
@@ -357,7 +357,7 @@ class BookingController extends Controller
         catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to create booking: ' . $e->getMessage()
+                'message' => 'Failed to create booking: '
         ], 500);
         }
     }
@@ -414,9 +414,10 @@ class BookingController extends Controller
                 ]
             ]);
         } catch (\Exception $e) {
+            \Log::error($e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to retrieve total bookings: ' . $e->getMessage()
+                'message' => 'Failed to retrieve total bookings: '
             ], 500);
         }
     }
@@ -490,9 +491,10 @@ class BookingController extends Controller
                 'data' => $formattedRevenue
             ]);
         } catch (\Exception $e) {
+            \Log::error($e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to retrieve monthly revenue: ' . $e->getMessage()
+                'message' => 'Failed to retrieve monthly revenue: '
             ], 500);
         }
 

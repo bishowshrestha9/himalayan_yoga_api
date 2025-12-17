@@ -30,22 +30,15 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        // Disable detailed error pages and use JSON responses for API
-        $exceptions->shouldRenderJsonWhen(function ($request, Throwable $e) {
-            return $request->is('api/*');
+        // Completely disable Symfony's error page for API routes
+        $exceptions->dontReport([]);
+        
+        // Force JSON responses for API routes
+        $exceptions->shouldRenderJsonWhen(function ($request) {
+            return $request->is('api/*') || $request->expectsJson();
         });
 
-        // Handle 404 Not Found exceptions
-        $exceptions->renderable(function (NotFoundHttpException $e, $request) {
-            if ($request->is('api/*')) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'The requested resource could not be found.',
-                ], 404);
-            }
-        });
-
-        // Handle 405 Method Not Allowed exceptions
+        // Handle all exceptions with priority order
         $exceptions->renderable(function (MethodNotAllowedHttpException $e, $request) {
             if ($request->is('api/*')) {
                 return response()->json([
@@ -55,23 +48,26 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
 
-        // Handle all other exceptions - hide details in production
-        $exceptions->renderable(function (\Throwable $e, $request) {
+        $exceptions->renderable(function (NotFoundHttpException $e, $request) {
             if ($request->is('api/*')) {
-                // Only show detailed errors in local/development environment
-                if (config('app.debug')) {
-                    return response()->json([
-                        'status' => false,
-                        'message' => 'An error occurred',
-                        'error' => $e->getMessage(),
-                    ], 500);
-                }
-
-                // In production, return generic error message
                 return response()->json([
                     'status' => false,
-                    'message' => 'An unexpected error occurred. Please try again later.',
-                ], 500);
+                    'message' => 'The requested resource could not be found.',
+                ], 404);
+            }
+        });
+
+        // Catch-all for any other exception
+        $exceptions->renderable(function (Throwable $e, $request) {
+            if ($request->is('api/*')) {
+                $statusCode = method_exists($e, 'getStatusCode') ? $e->getStatusCode() : 500;
+                
+                return response()->json([
+                    'status' => false,
+                    'message' => config('app.debug') 
+                        ? $e->getMessage() 
+                        : 'An unexpected error occurred. Please try again later.',
+                ], $statusCode);
             }
         });
     })->create();

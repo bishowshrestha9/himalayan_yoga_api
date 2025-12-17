@@ -146,10 +146,11 @@ class DashboardController extends Controller
                 ]
             ], 200);
         } catch (\Exception $e) {
+            \Log::error($e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to fetch dashboard data',
-                'error' => $e->getMessage(),
+                // Error logged server-side,
             ], 500);
         }
     }

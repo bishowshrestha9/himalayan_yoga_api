@@ -87,14 +87,15 @@ class InquiryController extends Controller
                 ]
             ], 200);
         } catch (\Exception $e) {
+            \Log::error($e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
             Log::error('Failed to fetch inquiries', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                // Error logged server-side,
+                
             ]);
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to fetch inquiries',
-                'error' => $e->getMessage(),
+                // Error logged server-side,
             ], 500);
         }
     }
@@ -153,15 +154,16 @@ class InquiryController extends Controller
 
 
         } catch (\Exception $e) {
+            \Log::error($e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
             Log::error('Failed to create inquiry', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                // Error logged server-side,
+                ,
                 'data' => $request->all()
             ]);
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to submit inquiry',
-                'error' => $e->getMessage(),
+                // Error logged server-side,
             ], 500);
         }
     }
@@ -234,15 +236,16 @@ class InquiryController extends Controller
                 'data' => $inquiry,
             ], 200);
         } catch (\Exception $e) {
+            \Log::error($e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
             Log::error('Failed to fetch inquiry', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                // Error logged server-side,
+                ,
                 'inquiry_id' => $id
             ]);
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to fetch inquiry',
-                'error' => $e->getMessage(),
+                // Error logged server-side,
             ], 500);
         }
     }
@@ -297,15 +300,16 @@ class InquiryController extends Controller
                 'message' => 'Inquiry deleted successfully',
             ], 200);
         } catch (\Exception $e) {
+            \Log::error($e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
             Log::error('Failed to delete inquiry', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                // Error logged server-side,
+                ,
                 'inquiry_id' => $id
             ]);
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to delete inquiry',
-                'error' => $e->getMessage(),
+                // Error logged server-side,
             ], 500);
         }
     }
