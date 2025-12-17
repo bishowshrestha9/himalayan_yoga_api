@@ -11,6 +11,7 @@ use App\Http\Controllers\api\InstructorController;
 use App\Http\Controllers\api\ServiceController;
 use App\Http\Controllers\api\InquiryController;
 use App\Http\Controllers\api\BookingController;
+use App\Http\Controllers\api\DashboardController;
 
 
 // Public routes with rate limiting
@@ -53,14 +54,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/', [BlogsController::class, 'store']);
         Route::post('/{id}', [BlogsController::class, 'update']); // Use POST for file uploads
         Route::delete('/{id}', [BlogsController::class, 'destroy']);
+        Route::get('/total', [BlogsController::class, 'getTotalBlogs']);
     });
     
     // Admin-only review management
     Route::prefix('reviews')->middleware('admin')->group(function () {
+        Route::get('/', [ReviewController::class, 'getReviews']);
         
-        Route::get('/publishable', [ReviewController::class, 'getPublishableReviews']);
         Route::delete('/{id}', [ReviewController::class, 'delete']);
         Route::post('/{id}/approve', [ReviewController::class, 'approveReview']);
+        Route::get('/pn',[ReviewController::class,'getPositiveAndNegativeReviewsCount']);
     });
     
     // Admin-only instructor management
@@ -76,6 +79,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{id}', [ServiceController::class, 'update']); // Use POST for file uploads
         Route::post('/{id}/toggle-status', [ServiceController::class, 'toggleStatus']);
         Route::delete('/{id}', [ServiceController::class, 'destroy']);
+        Route::get('/total', [ServiceController::class, 'getTotalServices']);
     });
     
     // Admin-only inquiry management
@@ -83,6 +87,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', [InquiryController::class, 'index']);
         Route::get('/{id}', [InquiryController::class, 'show']);
         Route::delete('/{id}', [InquiryController::class, 'destroy']);
+        Route::get('/total/count', [InquiryController::class, 'getTotalInquiry']);
     });
     
     // Super admin only routes for user management
@@ -96,11 +101,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('bookings')->middleware('admin')->group(function () {
         Route::get('/', [BookingController::class, 'index']);
         Route::put('/{id}/status', [BookingController::class, 'updateStatus']);
+        Route::get('/total', [BookingController::class, 'getTotalBookings']);
+        Route::get('/monthly-revenue', [BookingController::class, 'getMonthlyRevenue']);
     });
     
     Route::post('users/change-password', [UserController::class, 'changePassword']);
     
     Route::get('/user', [AuthController::class, 'me']);
+    
+    // Dashboard data - all stats in one call
+    Route::get('/main-d', [DashboardController::class, 'getDashboardData'])->middleware('admin');
 });
 
 // Public booking creation - rate limited
@@ -116,6 +126,7 @@ Route::get('/service/top-six', [ServiceController::class, 'getTopSixServices']);
 
 
 Route::get('/reviews/four', [ReviewController::class, 'getFourReviews']);
-Route::get('/reviews', [ReviewController::class, 'getReviews']);
+
+Route::get('/reviews/publishable', [ReviewController::class, 'getPublishableReviews']);
 
 

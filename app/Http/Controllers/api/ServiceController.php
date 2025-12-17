@@ -54,10 +54,11 @@ class ServiceController extends Controller
             new OA\Response(response: 404, description: "No services found")
         ]
     )]
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $services = Service::with('instructor')->get();
+            $perPage = $request->input('per_page', 10);
+            $services = Service::with('instructor')->paginate($perPage);
             
             if ($services->isEmpty()) {
                 return response()->json([
@@ -66,7 +67,7 @@ class ServiceController extends Controller
                 ], 404);
             }
             
-            $services->transform(function ($service) {
+            $services->getCollection()->transform(function ($service) {
                 // Convert image paths to full URLs
                 $service->image_urls = $service->images ? array_map(function($image) {
                     return asset('storage/' . $image);
@@ -86,7 +87,13 @@ class ServiceController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => 'Services fetched successfully',
-                'data' => $services,
+                'data' => $services->items(),
+                'pagination' => [
+                    'current_page' => $services->currentPage(),
+                    'last_page' => $services->lastPage(),
+                    'per_page' => $services->perPage(),
+                    'total' => $services->total(),
+                ]
             ], 200);
         } catch (\Exception $e) {
             Log::error('Failed to fetch services', [
@@ -607,6 +614,61 @@ class ServiceController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to fetch top six services',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+
+    #[OA\Get(
+        path: "/services/total",
+        summary: "Get total count of services",
+        tags: ["Services"],
+        security: [["bearerAuth" => []]],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Total services count fetched successfully",
+                content: new OA\MediaType(
+                    mediaType: "application/json",
+                    schema: new OA\Schema(
+                        properties: [
+                            new OA\Property(property: "status", type: "boolean", example: true),
+                            new OA\Property(property: "total_services", type: "integer", example: 12)
+                        ]
+                    )
+                )
+            ),
+            new OA\Response(
+                response: 500,
+                description: "Failed to get total services",
+                content: new OA\MediaType(
+                    mediaType: "application/json",
+                    schema: new OA\Schema(
+                        properties: [
+                            new OA\Property(property: "status", type: "boolean", example: false),
+                            new OA\Property(property: "message", type: "string", example: "Failed to get total services")
+                        ]
+                    )
+                )
+            )
+        ]
+    )]
+    public function getTotalServices(){
+        try {
+            $total = Service::count();
+            return response()->json([
+                'status' => true,
+                'total_services' => $total
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to get total services', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to get total services',
                 'error' => $e->getMessage(),
             ], 500);
         }

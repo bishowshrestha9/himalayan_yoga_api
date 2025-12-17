@@ -52,10 +52,11 @@ class InquiryController extends Controller
             new OA\Response(response: 404, description: "No inquiries found")
         ]
     )]
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $inquiries = Inquiry::with('service')->orderBy('created_at', 'desc')->get();
+            $perPage = $request->input('per_page', 10);
+            $inquiries = Inquiry::with('service')->orderBy('created_at', 'desc')->paginate($perPage);
             
             if ($inquiries->isEmpty()) {
                 return response()->json([
@@ -64,7 +65,7 @@ class InquiryController extends Controller
                 ], 404);
             }
             
-            $inquiries->transform(function ($inquiry) {
+            $inquiries->getCollection()->transform(function ($inquiry) {
                 // Replace service object with just the name
                 $inquiry->service_name = $inquiry->service ? $inquiry->service->title : null;
                 unset($inquiry->service);
@@ -77,7 +78,13 @@ class InquiryController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => 'Inquiries fetched successfully',
-                'data' => $inquiries,
+                'data' => $inquiries->items(),
+                'pagination' => [
+                    'current_page' => $inquiries->currentPage(),
+                    'last_page' => $inquiries->lastPage(),
+                    'per_page' => $inquiries->perPage(),
+                    'total' => $inquiries->total(),
+                ]
             ], 200);
         } catch (\Exception $e) {
             Log::error('Failed to fetch inquiries', [
@@ -301,5 +308,35 @@ class InquiryController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
+    }
+
+
+    #[OA\Get(
+        path: "/inquiries/total/count",
+        summary: "Get total count of inquiries",
+        tags: ["Inquiries"],
+        security: [["bearerAuth" => []]],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Total inquiries count fetched successfully",
+                content: new OA\MediaType(
+                    mediaType: "application/json",
+                    schema: new OA\Schema(
+                        properties: [
+                            new OA\Property(property: "status", type: "boolean", example: true),
+                            new OA\Property(property: "total_inquiries", type: "integer", example: 42)
+                        ]
+                    )
+                )
+            )
+        ]
+    )]
+    public function getTotalInquiry(){
+        $total = Inquiry::count();
+        return response()->json([
+            'status' => true,
+            'total_inquiries' => $total
+        ]);
     }
 }

@@ -361,4 +361,148 @@ class BookingController extends Controller
         ], 500);
         }
     }
+
+
+    #[OA\Get(
+        path: "/bookings/total",
+        summary: "Get total count of bookings",
+        tags: ["Bookings"],
+        security: [["bearerAuth" => []]],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Total bookings count fetched successfully",
+                content: new OA\MediaType(
+                    mediaType: "application/json",
+                    schema: new OA\Schema(
+                        properties: [
+                            new OA\Property(property: "status", type: "boolean", example: true),
+                            new OA\Property(
+                                property: "data",
+                                type: "object",
+                                properties: [
+                                    new OA\Property(property: "total_bookings", type: "integer", example: 150)
+                                ]
+                            )
+                        ]
+                    )
+                )
+            ),
+            new OA\Response(
+                response: 500,
+                description: "Failed to retrieve total bookings",
+                content: new OA\MediaType(
+                    mediaType: "application/json",
+                    schema: new OA\Schema(
+                        properties: [
+                            new OA\Property(property: "status", type: "boolean", example: false),
+                            new OA\Property(property: "message", type: "string", example: "Failed to retrieve total bookings")
+                        ]
+                    )
+                )
+            )
+        ]
+    )]
+    public function getTotalBookings()
+    {
+        try {
+            $totalBookings = \App\Models\Booking::count();
+            return response()->json([
+                'status' => true,
+                'data' => [
+                    'total_bookings' => $totalBookings
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to retrieve total bookings: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+    #[OA\Get(
+        path: "/bookings/monthly-revenue",
+        summary: "Get monthly revenue for current year",
+        tags: ["Bookings"],
+        security: [["bearerAuth" => []]],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Monthly revenue fetched successfully",
+                content: new OA\MediaType(
+                    mediaType: "application/json",
+                    schema: new OA\Schema(
+                        properties: [
+                            new OA\Property(property: "status", type: "boolean", example: true),
+                            new OA\Property(
+                                property: "data",
+                                type: "array",
+                                items: new OA\Items(
+                                    type: "object",
+                                    properties: [
+                                        new OA\Property(property: "month", type: "integer", example: 1),
+                                        new OA\Property(property: "total_revenue", type: "number", format: "float", example: 15000.50)
+                                    ]
+                                )
+                            )
+                        ]
+                    )
+                )
+            ),
+            new OA\Response(
+                response: 500,
+                description: "Failed to retrieve monthly revenue",
+                content: new OA\MediaType(
+                    mediaType: "application/json",
+                    schema: new OA\Schema(
+                        properties: [
+                            new OA\Property(property: "status", type: "boolean", example: false),
+                            new OA\Property(property: "message", type: "string", example: "Failed to retrieve monthly revenue")
+                        ]
+                    )
+                )
+            )
+        ]
+    )]
+    public function getMonthlyRevenue(){
+        try {
+            $currentYear = date('Y');
+            $monthlyRevenue = \App\Models\Booking::selectRaw('MONTH(created_at) as month, SUM(price) as total_revenue')
+                ->whereYear('created_at', $currentYear)
+                ->groupBy('month')
+                ->orderBy('month')
+                ->get();
+
+            // Format the result to include all months
+            $formattedRevenue = [];
+            for ($month = 1; $month <= 12; $month++) {
+                $revenueData = $monthlyRevenue->firstWhere('month', $month);
+                $formattedRevenue[] = [
+                    'month' => $month,
+                    'total_revenue' => $revenueData ? (float) $revenueData->total_revenue : 0.0
+                ];
+            }
+
+            return response()->json([
+                'status' => true,
+                'data' => $formattedRevenue
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to retrieve monthly revenue: ' . $e->getMessage()
+            ], 500);
+        }
+
+    }
+
+
+    
+
 }
+
+
+    
+

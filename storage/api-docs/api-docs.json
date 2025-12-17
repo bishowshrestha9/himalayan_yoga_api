@@ -743,6 +743,42 @@
                 ]
             }
         },
+        "/blogs/total": {
+            "get": {
+                "tags": [
+                    "Blogs"
+                ],
+                "summary": "Get total count of blogs",
+                "operationId": "bf38bd2751c34d6be92ef9e68cff88b4",
+                "responses": {
+                    "200": {
+                        "description": "Total blogs count fetched successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "total_blogs": {
+                                            "type": "integer",
+                                            "example": 25
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/bookings": {
             "get": {
                 "tags": [
@@ -1237,6 +1273,299 @@
                 ]
             }
         },
+        "/bookings/total": {
+            "get": {
+                "tags": [
+                    "Bookings"
+                ],
+                "summary": "Get total count of bookings",
+                "operationId": "2e032581d4421de11ce43d737d96d118",
+                "responses": {
+                    "200": {
+                        "description": "Total bookings count fetched successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "total_bookings": {
+                                                    "type": "integer",
+                                                    "example": 150
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to retrieve total bookings",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Failed to retrieve total bookings"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/bookings/monthly-revenue": {
+            "get": {
+                "tags": [
+                    "Bookings"
+                ],
+                "summary": "Get monthly revenue for current year",
+                "operationId": "f382782e8f2fb582f53fa1a1d2f4a61e",
+                "responses": {
+                    "200": {
+                        "description": "Monthly revenue fetched successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "month": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "total_revenue": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 15000.5
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to retrieve monthly revenue",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Failed to retrieve monthly revenue"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/main-d": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get all dashboard data in one call",
+                "operationId": "ed73a368551e91e652f5cc0760aba891",
+                "responses": {
+                    "200": {
+                        "description": "Dashboard data fetched successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Dashboard data fetched successfully"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "total_blogs": {
+                                                    "type": "integer",
+                                                    "example": 25
+                                                },
+                                                "total_services": {
+                                                    "type": "integer",
+                                                    "example": 12
+                                                },
+                                                "total_inquiries": {
+                                                    "type": "integer",
+                                                    "example": 42
+                                                },
+                                                "total_bookings": {
+                                                    "type": "integer",
+                                                    "example": 150
+                                                },
+                                                "positive_reviews": {
+                                                    "type": "integer",
+                                                    "example": 85
+                                                },
+                                                "negative_reviews": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "monthly_revenue": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "month": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "total_revenue": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 15000.5
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "publishable_reviews": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "John Doe"
+                                                            },
+                                                            "email": {
+                                                                "type": "string",
+                                                                "example": "john@example.com"
+                                                            },
+                                                            "review": {
+                                                                "type": "string",
+                                                                "example": "Great service!"
+                                                            },
+                                                            "rating": {
+                                                                "type": "number",
+                                                                "example": 4.5
+                                                            },
+                                                            "service": {
+                                                                "type": "string",
+                                                                "example": "Hatha Yoga"
+                                                            },
+                                                            "created_at": {
+                                                                "type": "string",
+                                                                "example": "2025-01-15"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "reviews_pagination": {
+                                                    "properties": {
+                                                        "current_page": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "last_page": {
+                                                            "type": "integer",
+                                                            "example": 3
+                                                        },
+                                                        "per_page": {
+                                                            "type": "integer",
+                                                            "example": 8
+                                                        },
+                                                        "total": {
+                                                            "type": "integer",
+                                                            "example": 20
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to fetch dashboard data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Failed to fetch dashboard data"
+                                        },
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Database error"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/inquiries": {
             "get": {
                 "tags": [
@@ -1506,6 +1835,42 @@
                     },
                     "404": {
                         "description": "Inquiry not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/inquiries/total/count": {
+            "get": {
+                "tags": [
+                    "Inquiries"
+                ],
+                "summary": "Get total count of inquiries",
+                "operationId": "537a3f2ddd2d21b40e221f3ac76d78e2",
+                "responses": {
+                    "200": {
+                        "description": "Total inquiries count fetched successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "total_inquiries": {
+                                            "type": "integer",
+                                            "example": 42
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -2372,6 +2737,75 @@
                 ]
             }
         },
+        "/reviews/pn": {
+            "get": {
+                "tags": [
+                    "Reviews"
+                ],
+                "summary": "Get count of positive and negative reviews",
+                "operationId": "7e0f54841cf9b5c60a696b0218e044dc",
+                "responses": {
+                    "200": {
+                        "description": "Positive and negative reviews count fetched successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "positive_reviews": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                },
+                                                "negative_reviews": {
+                                                    "type": "integer",
+                                                    "example": 3
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to retrieve reviews count",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Failed to retrieve reviews count"
+                                        },
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Database error"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/services": {
             "get": {
                 "tags": [
@@ -2847,6 +3281,62 @@
                 ]
             }
         },
+        "/services/total": {
+            "get": {
+                "tags": [
+                    "Services"
+                ],
+                "summary": "Get total count of services",
+                "operationId": "53cfcacf483f0321477293d67d266e55",
+                "responses": {
+                    "200": {
+                        "description": "Total services count fetched successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "total_services": {
+                                            "type": "integer",
+                                            "example": 12
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to get total services",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Failed to get total services"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/users/admin": {
             "post": {
                 "tags": [
@@ -3245,6 +3735,10 @@
         {
             "name": "Bookings",
             "description": "Bookings"
+        },
+        {
+            "name": "Dashboard",
+            "description": "Dashboard"
         },
         {
             "name": "Inquiries",

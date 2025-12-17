@@ -185,11 +185,12 @@ class ReviewController extends Controller
             )
         ]
     )]
-    public function getReviews()
+    public function getReviews(Request $request)
     {
         try {
-            //
-            $reviews = Reviews::with('service')->get();
+            $perPage = $request->input('per_page', 10);
+            $reviews = Reviews::with('service')->paginate($perPage);
+            
             if ($reviews->isEmpty()) {
                 return response()->json([
                     'status' => false,
@@ -213,6 +214,12 @@ class ReviewController extends Controller
                 'status' => true,
                 'message' => 'Reviews fetched successfully',  
                 'data' => $data,
+                'pagination' => [
+                    'current_page' => $reviews->currentPage(),
+                    'last_page' => $reviews->lastPage(),
+                    'per_page' => $reviews->perPage(),
+                    'total' => $reviews->total(),
+                ]
             ], 200);
         }
         catch (\Exception $e) {
@@ -287,10 +294,12 @@ class ReviewController extends Controller
             )
         ]
     )]
-    public function getPublishableReviews()
+    public function getPublishableReviews(Request $request)
     {
         try {
-            $reviews = Reviews::with('service')->where('status', true)->orderBy('created_at', 'desc')->take(3)->get();
+            $perPage = $request->input('per_page', 8);
+            $reviews = Reviews::with('service')->where('status', 1)->orderBy('created_at', 'desc')->paginate($perPage);
+            
             if ($reviews->isEmpty()) {
                 return response()->json([
                     'status' => false,
@@ -313,6 +322,12 @@ class ReviewController extends Controller
                 'status' => true,
                 'message' => 'Publishable reviews fetched successfully',
                 'data' => $data,
+                'pagination' => [
+                    'current_page' => $reviews->currentPage(),
+                    'last_page' => $reviews->lastPage(),
+                    'per_page' => $reviews->perPage(),
+                    'total' => $reviews->total(),
+                ]
             ], 200);
         }
         catch (\Exception $e) {
@@ -474,6 +489,69 @@ class ReviewController extends Controller
                 'status' => false,
                 'message' => 'Failed to fetch reviews',
                 'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+
+
+    #[OA\Get(
+        path: "/reviews/pn",
+        summary: "Get count of positive and negative reviews",
+        tags: ["Reviews"],
+        security: [["bearerAuth" => []]],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Positive and negative reviews count fetched successfully",
+                content: new OA\MediaType(
+                    mediaType: "application/json",
+                    schema: new OA\Schema(
+                        properties: [
+                            new OA\Property(property: "status", type: "boolean", example: true),
+                            new OA\Property(property: "data", type: "object",
+                                properties: [
+                                    new OA\Property(property: "positive_reviews", type: "integer", example:
+                                        15),
+                                    new OA\Property(property: "negative_reviews", type: "integer", example: 3),
+                                ]
+                            )
+                        ]
+                    )
+                )
+            ),
+            new OA\Response(
+                response: 500,
+                description: "Failed to retrieve reviews count",
+                content: new OA\MediaType(
+                    mediaType: "application/json",
+                    schema: new OA\Schema(
+                        properties: [
+                            new OA\Property(property: "status", type: "boolean", example: false),
+                            new OA\Property(property: "message", type: "string", example: "Failed to retrieve reviews count"),
+                            new OA\Property(property: "error", type: "string", example: "Database error")
+                        ]
+                    )
+                )
+            )
+        ]
+    )]
+    public function getPositiveAndNegativeReviewsCount(){
+        try {
+            $positiveCount = \App\Models\Review::where('rating', '>=', 4)->count();
+            $negativeCount = \App\Models\Review::where('rating', '<', 3)->count();
+
+            return response()->json([
+                'status' => true,
+                'data' => [
+                    'positive_reviews' => $positiveCount,
+                    'negative_reviews' => $negativeCount
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to retrieve reviews count: ' . $e->getMessage()
             ], 500);
         }
     }

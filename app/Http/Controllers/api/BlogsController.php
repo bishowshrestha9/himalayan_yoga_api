@@ -23,9 +23,11 @@ class BlogsController extends Controller
         ],
     )]
 
-    public function index(){
+    public function index(Request $request){
         try {
-            $blogs = Blogs::all();
+            $perPage = $request->input('per_page', 10);
+            $blogs = Blogs::paginate($perPage);
+            
             if ($blogs->isEmpty()) {
                 return response()->json([
                     'status' => false,
@@ -34,7 +36,7 @@ class BlogsController extends Controller
             }
             
             // Add full image URL to each blog
-            $blogs->transform(function ($blog) {
+            $blogs->getCollection()->transform(function ($blog) {
                 $blog->image_url = $blog->image ? url('storage/' . $blog->image) : null;
                 return $blog;
             });
@@ -42,7 +44,13 @@ class BlogsController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => 'Blogs fetched successfully',
-                'data' => $blogs,
+                'data' => $blogs->items(),
+                'pagination' => [
+                    'current_page' => $blogs->currentPage(),
+                    'last_page' => $blogs->lastPage(),
+                    'per_page' => $blogs->perPage(),
+                    'total' => $blogs->total(),
+                ]
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -513,4 +521,39 @@ class BlogsController extends Controller
             ], 500);
         }
     }
+
+
+
+
+
+    #[OA\Get(
+        path: "/blogs/total",
+        summary: "Get total count of blogs",
+        tags: ["Blogs"],
+        security: [["bearerAuth" => []]],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Total blogs count fetched successfully",
+                content: new OA\MediaType(
+                    mediaType: "application/json",
+                    schema: new OA\Schema(
+                        properties: [
+                            new OA\Property(property: "status", type: "boolean", example: true),
+                            new OA\Property(property: "total_blogs", type: "integer", example: 25)
+                        ]
+                    )
+                )
+            )
+        ]
+    )]
+    public function getTotalBlogs(){
+        $total = Blogs::count();
+        return response()->json([
+            'status' => true,
+            'total_blogs' => $total
+        ]);
+    }
+
+
 }
