@@ -30,8 +30,13 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Disable detailed error pages and use JSON responses for API
+        $exceptions->shouldRenderJsonWhen(function ($request, Throwable $e) {
+            return $request->is('api/*');
+        });
+
         // Handle 404 Not Found exceptions
-        $exceptions->render(function (NotFoundHttpException $e, $request) {
+        $exceptions->renderable(function (NotFoundHttpException $e, $request) {
             if ($request->is('api/*')) {
                 return response()->json([
                     'status' => false,
@@ -41,7 +46,7 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         // Handle 405 Method Not Allowed exceptions
-        $exceptions->render(function (MethodNotAllowedHttpException $e, $request) {
+        $exceptions->renderable(function (MethodNotAllowedHttpException $e, $request) {
             if ($request->is('api/*')) {
                 return response()->json([
                     'status' => false,
@@ -51,7 +56,7 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         // Handle all other exceptions - hide details in production
-        $exceptions->render(function (\Throwable $e, $request) {
+        $exceptions->renderable(function (\Throwable $e, $request) {
             if ($request->is('api/*')) {
                 // Only show detailed errors in local/development environment
                 if (config('app.debug')) {
@@ -59,9 +64,6 @@ return Application::configure(basePath: dirname(__DIR__))
                         'status' => false,
                         'message' => 'An error occurred',
                         'error' => $e->getMessage(),
-                        'file' => $e->getFile(),
-                        'line' => $e->getLine(),
-                        'trace' => $e->getTrace(),
                     ], 500);
                 }
 
