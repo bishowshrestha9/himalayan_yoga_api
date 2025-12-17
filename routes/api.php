@@ -32,7 +32,7 @@ Route::group(['prefix' => 'instructors'], function () {
 // Public service routes
 Route::group(['prefix' => 'services'], function () {
     Route::get('/', [ServiceController::class, 'index']);
-    Route::get('/{id}', [ServiceController::class, 'show']);
+    Route::get('/{slug}', [ServiceController::class, 'show']);
 });
 
 // Public review submission (no auth required) - rate limited

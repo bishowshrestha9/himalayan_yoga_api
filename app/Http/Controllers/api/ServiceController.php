@@ -156,7 +156,7 @@ class ServiceController extends Controller
             $validatedData = $request->validated();
           
             // Auto-generate slug from title
-            $validatedData['slug'] = strtolower(str_replace(' ', '_', $validatedData['title']));
+            $validatedData['slug'] = strtolower(str_replace(' ', '-', $validatedData['title']));
             
             // Convert comma-separated strings to arrays
             if (isset($validatedData['benefits']) && is_string($validatedData['benefits'])) {
