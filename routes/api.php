@@ -113,6 +113,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/main-d', [DashboardController::class, 'getDashboardData'])->middleware('admin');
 });
 
+
+Route::prefix('payment')->group(function () {
+    // Public routes - Called by your frontend
+    Route::post('/create-payment-intent', [PaymentController::class, 'createPaymentIntent']);
+    Route::post('/cancel-payment-intent/{id}', [PaymentController::class, 'handlePaymentCanceled']); 
+    
+    
+    // Webhook - Called ONLY by Stripe servers (not from frontend!)
+    // Configure this URL in your Stripe Dashboard: https://dashboard.stripe.com/webhooks
+    Route::post('/webhook', [PaymentController::class, 'webhook']);
+});
+
 // Public booking creation - rate limited
 Route::post('/bookings', [BookingController::class, 'store'])->middleware('throttle:3,1'); // 3 bookings per minute
 Route::get('/service/idname', [ServiceController::class, 'getServiceIdAndName']);
@@ -130,3 +142,23 @@ Route::get('/reviews/four', [ReviewController::class, 'getFourReviews']);
 Route::get('/reviews/publishable', [ReviewController::class, 'getPublishableReviews']);
 
 
+// routes/web.php or routes/api.php
+use Stripe\Stripe;
+use Stripe\Balance;
+
+Route::get('/test-stripe', function () {
+    Stripe::setApiKey(config('services.stripe.secret'));
+
+    try {
+        $balance = Balance::retrieve();
+        return response()->json([
+            'status' => 'success',
+            'balance' => $balance
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ], 500);
+    }
+});

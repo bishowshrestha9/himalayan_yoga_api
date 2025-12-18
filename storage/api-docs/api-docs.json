@@ -3709,6 +3709,283 @@
                     }
                 ]
             }
+        },
+        "/payment/create-payment-intent": {
+            "post": {
+                "tags": [
+                    "Payment"
+                ],
+                "summary": "Create a payment intent for embedded checkout",
+                "description": "Creates a Stripe payment intent and saves payment record to database. Returns client secret for frontend payment confirmation.",
+                "operationId": "66909529277ee8f31c29571b080588ba",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "fullName",
+                                    "email",
+                                    "phoneNumber",
+                                    "invoiceNumber",
+                                    "description",
+                                    "amount"
+                                ],
+                                "properties": {
+                                    "fullName": {
+                                        "description": "Customer full name",
+                                        "type": "string",
+                                        "example": "John Doe"
+                                    },
+                                    "email": {
+                                        "description": "Customer email address",
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "john@example.com"
+                                    },
+                                    "phoneNumber": {
+                                        "description": "Customer phone number",
+                                        "type": "string",
+                                        "example": "+61400000000"
+                                    },
+                                    "invoiceNumber": {
+                                        "description": "Unique invoice number",
+                                        "type": "string",
+                                        "example": "INV-2025-001"
+                                    },
+                                    "description": {
+                                        "description": "Payment description",
+                                        "type": "string",
+                                        "example": "Payment for premium service"
+                                    },
+                                    "amount": {
+                                        "description": "Payment amount in AUD",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 100.5
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Payment intent created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "payment_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "payment_intent": {
+                                                    "type": "string",
+                                                    "example": "pi_xxxxxxxxxxxxx"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "john@example.com"
+                                                },
+                                                "amount": {
+                                                    "type": "number",
+                                                    "example": 100.5
+                                                },
+                                                "client_secret": {
+                                                    "type": "string",
+                                                    "example": "pi_xxxxx_secret_xxxxx"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Payment intent created successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error or duplicate invoice number",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invoice number already exists"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Error message"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/payments": {
+            "get": {
+                "tags": [
+                    "Payment"
+                ],
+                "summary": "Get all payments (Admin/SuperAdmin only)",
+                "description": "Retrieves all payment records from the database. Only accessible by authenticated admins.",
+                "operationId": "f37dcb9d3dd7dea59369348da64f560d",
+                "responses": {
+                    "200": {
+                        "description": "Payments retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "full_name": {
+                                                        "type": "string",
+                                                        "example": "John Doe"
+                                                    },
+                                                    "email": {
+                                                        "type": "string",
+                                                        "example": "john@example.com"
+                                                    },
+                                                    "phone_number": {
+                                                        "type": "string",
+                                                        "example": "+61400000000"
+                                                    },
+                                                    "invoice_number": {
+                                                        "type": "string",
+                                                        "example": "INV-2025-001"
+                                                    },
+                                                    "description": {
+                                                        "type": "string",
+                                                        "example": "Payment for premium service"
+                                                    },
+                                                    "amount": {
+                                                        "type": "number",
+                                                        "example": 100.5
+                                                    },
+                                                    "currency": {
+                                                        "type": "string",
+                                                        "example": "aud"
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "succeeded"
+                                                    },
+                                                    "paid_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2025-10-14T10:30:00.000000Z"
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2025-10-14T10:25:00.000000Z"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2025-10-14T10:30:00.000000Z"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Payments retrieved successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - Insufficient permissions",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthorized"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -3724,6 +4001,10 @@
         }
     },
     "tags": [
+        {
+            "name": "Payment",
+            "description": "Stripe payment integration endpoints"
+        },
         {
             "name": "Authentication",
             "description": "Authentication"

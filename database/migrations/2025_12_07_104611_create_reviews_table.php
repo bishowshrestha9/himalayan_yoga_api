@@ -17,8 +17,11 @@ return new class extends Migration
             $table->string('name');
             $table->string('email');
             $table->text('review');
+            $table->unsignedBigInteger('service_id');
             $table->integer('rating');
             $table->boolean('status')->default(false);
+            $table->foreign('service_id')->references('id')->on('services')->onDelete('cascade');   
+            
         });
     }
 

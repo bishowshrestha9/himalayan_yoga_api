@@ -198,6 +198,7 @@ class ReviewController extends Controller
             }
             $data = [];
             foreach ($reviews as $review) {
+              
                 $data[] = [
                     'id' => $review->id,
                     'name' => $review->name,
@@ -313,7 +314,7 @@ class ReviewController extends Controller
                     'review' => $review->review,
                     'rating' => $review->rating,
                     'service' => $review->service ? $review->service->title : null,
-                    'created_at' => $review->created_at->toDateString(),
+                    'created_at' => $review->created_at,
                 ];
             }
             return response()->json([
