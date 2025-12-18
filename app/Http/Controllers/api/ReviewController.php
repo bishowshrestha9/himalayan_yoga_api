@@ -115,7 +115,6 @@ class ReviewController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to create review',
-                // Error logged server-side,
             ], 500);
         }
     }
@@ -226,7 +225,6 @@ class ReviewController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to fetch reviews',
-                // Error logged server-side,
             ], 500);
         }
     }
@@ -334,7 +332,6 @@ class ReviewController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to fetch publishable reviews',
-                // Error logged server-side,
             ], 500);
         }
     }
@@ -424,7 +421,6 @@ class ReviewController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to delete reviews',
-                // Error logged server-side,
             ], 500);
         }
     }
@@ -451,7 +447,6 @@ class ReviewController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to approve review',
-                // Error logged server-side,
             ], 500);
         }
     }
@@ -488,7 +483,6 @@ class ReviewController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to fetch reviews',
-                // Error logged server-side,
             ], 500);
         }
     }

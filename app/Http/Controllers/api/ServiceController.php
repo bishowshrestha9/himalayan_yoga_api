@@ -96,15 +96,14 @@ class ServiceController extends Controller
                 ]
             ], 200);
         } catch (\Exception $e) {
-            \Log::error($e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
             Log::error('Failed to fetch services', [
-                // Error logged server-side,
-                
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
             ]);
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to fetch services',
-                // Error logged server-side,
             ], 500);
         }
     }
@@ -196,16 +195,15 @@ class ServiceController extends Controller
                 'message' => 'Service created successfully',
             ], 201);
         } catch (\Exception $e) {
-            \Log::error($e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
             Log::error('Failed to create service', [
-                // Error logged server-side,
-                ,
-                'data' => $request->except(['image'])
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'data' => $request->except(['images'])
             ]);
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to create service',
-                // Error logged server-side,
             ], 500);
         }
     }
@@ -285,16 +283,15 @@ class ServiceController extends Controller
                 'data' => $service,
             ], 200);
         } catch (\Exception $e) {
-            \Log::error($e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
             Log::error('Failed to fetch service', [
-                // Error logged server-side,
-                ,
-                'service_id' => $id
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'service_slug' => $slug
             ]);
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to fetch service',
-                // Error logged server-side,
             ], 500);
         }
     }
@@ -403,17 +400,16 @@ class ServiceController extends Controller
                 'message' => 'Service updated successfully',
             ], 200);
         } catch (\Exception $e) {
-            \Log::error($e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
             Log::error('Failed to update service', [
-                // Error logged server-side,
-                ,
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
                 'service_id' => $id,
-                'data' => $request->except(['image'])
+                'data' => $request->except(['images'])
             ]);
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to update service',
-                // Error logged server-side,
             ], 500);
         }
     }
@@ -477,16 +473,15 @@ class ServiceController extends Controller
                 'message' => 'Service deleted successfully',
             ], 200);
         } catch (\Exception $e) {
-            \Log::error($e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
             Log::error('Failed to delete service', [
-                // Error logged server-side,
-                ,
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
                 'service_id' => $id
             ]);
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to delete service',
-                // Error logged server-side,
             ], 500);
         }
     }
@@ -546,14 +541,11 @@ class ServiceController extends Controller
         } catch (\Exception $e) {
             \Log::error($e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
             Log::error('Failed to toggle service status', [
-                // Error logged server-side,
-                ,
                 'service_id' => $id
             ]);
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to update service status',
-                // Error logged server-side,
             ], 500);
         }
     }
@@ -568,13 +560,10 @@ class ServiceController extends Controller
         } catch (\Exception $e) {
             \Log::error($e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
             Log::error('Failed to get service IDs and names', [
-                // Error logged server-side,
-                ,
             ]);
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to get service IDs and names',
-                // Error logged server-side,
             ], 500);
         }
     }
@@ -616,13 +605,11 @@ class ServiceController extends Controller
         } catch (\Exception $e) {
             \Log::error($e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
             Log::error('Failed to fetch top six services', [
-                // Error logged server-side,
                 
             ]);
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to fetch top six services',
-                // Error logged server-side,
             ], 500);
         }
     }
@@ -672,13 +659,10 @@ class ServiceController extends Controller
         } catch (\Exception $e) {
             \Log::error($e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
             Log::error('Failed to get total services', [
-                // Error logged server-side,
-                ,
             ]);
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to get total services',
-                // Error logged server-side,
             ], 500);
         }
     }

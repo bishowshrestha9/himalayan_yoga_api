@@ -150,7 +150,6 @@ class DashboardController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to fetch dashboard data',
-                // Error logged server-side,
             ], 500);
         }
     }

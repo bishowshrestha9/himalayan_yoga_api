@@ -57,7 +57,6 @@ class BlogsController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to fetch blogs',
-                // Error logged server-side,
             ], 500);
         }   
     }
@@ -179,7 +178,6 @@ class BlogsController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to create blog',
-                // Error logged server-side,
             ], 500);
         }
     }
@@ -279,7 +277,6 @@ class BlogsController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to fetch blog',
-                // Error logged server-side,
             ], 500);
         }
     }
@@ -434,7 +431,6 @@ class BlogsController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to update blog',
-                // Error logged server-side,
             ], 500);
         }
     }
@@ -522,7 +518,6 @@ class BlogsController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to delete blog',
-                // Error logged server-side,
             ], 500);
         }
     }

@@ -85,15 +85,14 @@ class InstructorController extends Controller
                 'data' => $instructors,
             ], 200);
         } catch (\Exception $e) {
-            \Log::error($e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
             Log::error('Failed to fetch instructors', [
-                // Error logged server-side,
-                
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
             ]);
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to fetch instructors',
-                // Error logged server-side,
             ], 500);
         }
     }
@@ -168,16 +167,15 @@ class InstructorController extends Controller
                 'message' => 'Instructor created successfully',
             ], 201);
         } catch (\Exception $e) {
-            \Log::error($e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
             Log::error('Failed to create instructor', [
-                // Error logged server-side,
-                ,
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
                 'data' => $request->except(['image'])
             ]);
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to create instructor',
-                // Error logged server-side,
             ], 500);
         }
     }
@@ -245,16 +243,15 @@ class InstructorController extends Controller
                 'data' => $instructor,
             ], 200);
         } catch (\Exception $e) {
-            \Log::error($e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
             Log::error('Failed to fetch instructor', [
-                // Error logged server-side,
-                ,
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
                 'instructor_id' => $id
             ]);
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to fetch instructor',
-                // Error logged server-side,
             ], 500);
         }
     }
@@ -349,17 +346,16 @@ class InstructorController extends Controller
                 'message' => 'Instructor updated successfully',
             ], 200);
         } catch (\Exception $e) {
-            \Log::error($e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
             Log::error('Failed to update instructor', [
-                // Error logged server-side,
-                ,
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
                 'instructor_id' => $id,
                 'data' => $request->except(['image'])
             ]);
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to update instructor',
-                // Error logged server-side,
             ], 500);
         }
     }
@@ -418,16 +414,15 @@ class InstructorController extends Controller
                 'message' => 'Instructor deleted successfully',
             ], 200);
         } catch (\Exception $e) {
-            \Log::error($e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
             Log::error('Failed to delete instructor', [
-                // Error logged server-side,
-                ,
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
                 'instructor_id' => $id
             ]);
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to delete instructor',
-                // Error logged server-side,
             ], 500);
         }
     }
