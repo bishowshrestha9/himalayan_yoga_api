@@ -77,10 +77,8 @@ class InstructorController extends Controller
             $instructors->transform(function ($instructor) {
                 if ($instructor->image) {
                     $imagePath = ltrim($instructor->image, '/');
-                    $instructor->image_url = asset('storage/' . $imagePath);
-                    // Remove accidental double slashes
-                    $instructor->image_url = preg_replace('#(?<!:)//+#', '/', $instructor->image_url);
-                    $instructor->image_url = str_replace(':/', '://', $instructor->image_url);
+                    $base = rtrim(config('app.url'), '/');
+                    $instructor->image_url = $base . '/storage/' . $imagePath;
                 } else {
                     $instructor->image_url = null;
                 }
@@ -245,9 +243,8 @@ class InstructorController extends Controller
             
             if ($instructor->image) {
                 $imagePath = ltrim($instructor->image, '/');
-                $instructor->image_url = asset('storage/' . $imagePath);
-                $instructor->image_url = preg_replace('#(?<!:)//+#', '/', $instructor->image_url);
-                $instructor->image_url = str_replace(':/', '://', $instructor->image_url);
+                $base = rtrim(config('app.url'), '/');
+                $instructor->image_url = $base . '/storage/' . $imagePath;
             } else {
                 $instructor->image_url = null;
             }
