@@ -75,7 +75,15 @@ class InstructorController extends Controller
             
             // Add full image URL to each instructor
             $instructors->transform(function ($instructor) {
-                $instructor->image_url = $instructor->image ? asset('storage/' . $instructor->image) : null;
+                if ($instructor->image) {
+                    $imagePath = ltrim($instructor->image, '/');
+                    $instructor->image_url = asset('storage/' . $imagePath);
+                    // Remove accidental double slashes
+                    $instructor->image_url = preg_replace('#(?<!:)//+#', '/', $instructor->image_url);
+                    $instructor->image_url = str_replace(':/', '://', $instructor->image_url);
+                } else {
+                    $instructor->image_url = null;
+                }
                 return $instructor;
             });
             
@@ -235,7 +243,14 @@ class InstructorController extends Controller
                 ], 404);
             }
             
-            $instructor->image_url = $instructor->image ? asset('storage/' . $instructor->image) : null;
+            if ($instructor->image) {
+                $imagePath = ltrim($instructor->image, '/');
+                $instructor->image_url = asset('storage/' . $imagePath);
+                $instructor->image_url = preg_replace('#(?<!:)//+#', '/', $instructor->image_url);
+                $instructor->image_url = str_replace(':/', '://', $instructor->image_url);
+            } else {
+                $instructor->image_url = null;
+            }
             
             return response()->json([
                 'status' => true,
