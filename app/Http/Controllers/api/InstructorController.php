@@ -75,13 +75,7 @@ class InstructorController extends Controller
             
             // Add full image URL to each instructor
             $instructors->transform(function ($instructor) {
-                if ($instructor->image) {
-                    $imagePath = ltrim($instructor->image, '/');
-                    $base = rtrim(config('app.url'), '/');
-                    $instructor->image_url = $base . '/storage/' . $imagePath;
-                } else {
-                    $instructor->image_url = null;
-                }
+                $instructor->image_url = $instructor->image ? asset('storage/' . $instructor->image) : null;
                 return $instructor;
             });
             
@@ -241,13 +235,7 @@ class InstructorController extends Controller
                 ], 404);
             }
             
-            if ($instructor->image) {
-                $imagePath = ltrim($instructor->image, '/');
-                $base = rtrim(config('app.url'), '/');
-                $instructor->image_url = $base . '/storage/' . $imagePath;
-            } else {
-                $instructor->image_url = null;
-            }
+            $instructor->image_url = $instructor->image ? asset('storage/' . $instructor->image) : null;
             
             return response()->json([
                 'status' => true,
