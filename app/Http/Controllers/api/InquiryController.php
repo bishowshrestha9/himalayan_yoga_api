@@ -141,7 +141,17 @@ class InquiryController extends Controller
     {
         try {
             $validated = $request->validated();
-      
+
+            // Check for existing inquiry from this email in the last hour
+            $recentInquiry = Inquiry::where('email', $validated['email'])
+                ->where('created_at', '>=', now()->subHour())
+                ->first();
+            if ($recentInquiry) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'You can only submit one inquiry per hour with this email address.',
+                ], 429);
+            }
 
             Inquiry::create($validated);
             Mail::to(config('mail.inquiry_recipient'))->send(new \App\Mail\NewInquiryNotification($validated));
@@ -150,7 +160,6 @@ class InquiryController extends Controller
                 'status' => true,
                 'message' => 'Inquiry submitted successfully',
             ], 201);
-
 
         } catch (\Exception $e) {
             Log::error('Failed to create inquiry', [
