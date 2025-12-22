@@ -86,9 +86,20 @@ class ReviewController extends Controller
     public function submitReview(ReviewsRequest $request)
     {
         try {
+            // Check for existing review from this email in the last hour
+            $recentReview = \App\Models\Reviews::where('email', $request->email)
+                ->where('created_at', '>=', now()->subHour())
+                ->first();
+            if ($recentReview) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'You can only submit one review per hour with this email address.',
+                ], 429);
+            }
+
             // Create the review
             $review = Reviews::create($request->all());
-            
+
             // Store review as a lead for lead management
             Lead::create([
                 'name' => $request->name,
@@ -103,12 +114,10 @@ class ReviewController extends Controller
                     'status' => $request->status,
                 ],
             ]);
-            
-   
+
             return response()->json([
                 'status' => true,
                 'message' => 'Review created successfully',
-
             ], 201);
         }
         catch (\Exception $e) {

@@ -180,6 +180,8 @@ class PaymentController extends Controller
             default:
                 \Log::info('Unhandled Stripe event type: ' . $event->type);
         }
+        
+
 
         return response()->json(['success' => true]);
     }

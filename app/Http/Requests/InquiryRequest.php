@@ -25,8 +25,11 @@ class InquiryRequest extends FormRequest
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
             'phone' => 'required|string|max:20',
-            'message' => 'required|string',
-            'service_id' => 'required|integer|exists:services,id'
+            'message' => 'required|string|min:10|max:2000', // Min length to prevent spam
+            'service_id' => 'required|integer|exists:services,id',
+            // Honeypot fields - should be empty (checked in controller, not validated here)
+            'website' => 'nullable|string',
+            'url' => 'nullable|string',
         ];
     }
 }

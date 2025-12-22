@@ -141,20 +141,151 @@ class InquiryController extends Controller
     {
         try {
             $validated = $request->validated();
-
-            // Check for existing inquiry from this email in the last hour
-            $recentInquiry = Inquiry::where('email', $validated['email'])
-                ->where('created_at', '>=', now()->subHour())
-                ->first();
-            if ($recentInquiry) {
+            
+            // Get client IP address
+            $ipAddress = $request->ip();
+            $userAgent = $request->userAgent() ?? 'Unknown';
+            
+            // ANTI-SPAM PROTECTION CHECKS
+            
+            // 1. Honeypot check - reject if honeypot fields are filled (bots will fill them)
+            if (!empty($request->input('website')) || !empty($request->input('url'))) {
+                Log::warning('Spam attempt detected - Honeypot triggered', [
+                    'ip' => $ipAddress,
+                    'email' => $validated['email'] ?? 'unknown',
+                    'user_agent' => $userAgent,
+                ]);
                 return response()->json([
                     'status' => false,
-                    'message' => 'You can only submit one inquiry per hour with this email address.',
+                    'message' => 'Invalid request',
+                ], 400);
+            }
+            
+            // 2. Check for duplicate email in last 2 hours (stricter than before)
+            $recentInquiryByEmail = Inquiry::where('email', $validated['email'])
+                ->where('created_at', '>=', now()->subHours(2))
+                ->first();
+            if ($recentInquiryByEmail) {
+                Log::info('Inquiry blocked - Duplicate email', [
+                    'ip' => $ipAddress,
+                    'email' => $validated['email'],
+                ]);
+                return response()->json([
+                    'status' => false,
+                    'message' => 'You can only submit one inquiry per 2 hours with this email address.',
                 ], 429);
             }
-
-            Inquiry::create($validated);
-            Mail::to(config('mail.inquiry_recipient'))->send(new \App\Mail\NewInquiryNotification($validated));
+            
+            // 3. Check for duplicate IP in last 30 minutes (very strict)
+            $recentInquiryByIP = Inquiry::where('ip_address', $ipAddress)
+                ->where('created_at', '>=', now()->subMinutes(30))
+                ->count();
+            if ($recentInquiryByIP >= 2) {
+                Log::warning('Spam attempt detected - Too many inquiries from IP', [
+                    'ip' => $ipAddress,
+                    'count' => $recentInquiryByIP,
+                    'user_agent' => $userAgent,
+                ]);
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Too many inquiries from this location. Please try again later.',
+                ], 429);
+            }
+            
+            // 4. Check for duplicate or very similar message content in last hour
+            $messageHash = md5(strtolower(trim($validated['message'])));
+            $similarMessage = Inquiry::where('created_at', '>=', now()->subHour())
+                ->whereRaw('MD5(LOWER(TRIM(message))) = ?', [$messageHash])
+                ->first();
+            if ($similarMessage) {
+                Log::warning('Spam attempt detected - Duplicate message content', [
+                    'ip' => $ipAddress,
+                    'email' => $validated['email'],
+                    'user_agent' => $userAgent,
+                ]);
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Duplicate message detected. Please modify your message.',
+                ], 429);
+            }
+            
+            // 5. Check for suspicious patterns (very short messages, repeated characters, etc.)
+            $message = trim($validated['message']);
+            if (strlen($message) < 10) {
+                Log::warning('Spam attempt detected - Message too short', [
+                    'ip' => $ipAddress,
+                    'email' => $validated['email'],
+                ]);
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Message is too short. Please provide more details.',
+                ], 422);
+            }
+            
+            // Check for repeated characters (e.g., "aaaaaaa" or "1111111")
+            if (preg_match('/(.)\1{10,}/', $message)) {
+                Log::warning('Spam attempt detected - Repeated characters', [
+                    'ip' => $ipAddress,
+                    'email' => $validated['email'],
+                ]);
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Invalid message format.',
+                ], 422);
+            }
+            
+            // 6. Check for suspicious email patterns (common spam patterns)
+            $email = strtolower($validated['email']);
+            $suspiciousPatterns = [
+                '/^[a-z0-9]+@[a-z0-9]+\.[a-z]{2,3}$/', // Too simple (e.g., a@b.co)
+            ];
+            // Check if email is too simple (less than 5 chars before @)
+            $emailParts = explode('@', $email);
+            if (strlen($emailParts[0]) < 3 || strlen($emailParts[0]) > 50) {
+                Log::warning('Spam attempt detected - Suspicious email format', [
+                    'ip' => $ipAddress,
+                    'email' => $validated['email'],
+                ]);
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Invalid email format.',
+                ], 422);
+            }
+            
+            // 7. Check total inquiries from this IP in last 24 hours
+            $dailyInquiriesFromIP = Inquiry::where('ip_address', $ipAddress)
+                ->where('created_at', '>=', now()->subDay())
+                ->count();
+            if ($dailyInquiriesFromIP >= 5) {
+                Log::warning('Spam attempt detected - Daily limit exceeded from IP', [
+                    'ip' => $ipAddress,
+                    'count' => $dailyInquiriesFromIP,
+                    'user_agent' => $userAgent,
+                ]);
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Daily inquiry limit reached. Please try again tomorrow.',
+                ], 429);
+            }
+            
+            // All checks passed - create inquiry
+            $inquiryData = array_merge($validated, [
+                'ip_address' => $ipAddress,
+                'user_agent' => $userAgent,
+            ]);
+            
+            Inquiry::create($inquiryData);
+            
+            // Send email notification
+            try {
+                Mail::to(config('mail.inquiry_recipient'))->send(new \App\Mail\NewInquiryNotification($validated));
+            } catch (\Exception $mailException) {
+                // Log mail error but don't fail the request
+                Log::error('Failed to send inquiry notification email', [
+                    'error' => $mailException->getMessage(),
+                    'inquiry_data' => $validated,
+                ]);
+            }
 
             return response()->json([
                 'status' => true,
@@ -166,6 +297,7 @@ class InquiryController extends Controller
                 'error' => $e->getMessage(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
+                'ip' => $request->ip(),
                 'data' => $request->all()
             ]);
             return response()->json([

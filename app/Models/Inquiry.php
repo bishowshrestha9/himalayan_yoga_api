@@ -13,6 +13,8 @@ class Inquiry extends Model
         'phone',
         'message',
         'service_id',
+        'ip_address',
+        'user_agent',
     ];
    
 

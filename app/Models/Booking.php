@@ -27,11 +27,17 @@ class Booking extends Model
         'status',
         'participants',
         'price',
+        'payment_id'
     ];
 
     public function service()
     {
         return $this->belongsTo(Service::class);
+    }
+
+    public function payment()
+    {
+        return $this->belongsTo(Payment::class);
     }
 
 }

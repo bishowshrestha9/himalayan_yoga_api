@@ -12,6 +12,8 @@ use App\Http\Controllers\api\ServiceController;
 use App\Http\Controllers\api\InquiryController;
 use App\Http\Controllers\api\BookingController;
 use App\Http\Controllers\api\DashboardController;
+use App\Http\Controllers\payment\PaymentController;
+use App\Http\Controllers\api\BookWithPayment;
 
 
 // Public routes with rate limiting
@@ -108,6 +110,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('users/change-password', [UserController::class, 'changePassword']);
     
     Route::get('/user', [AuthController::class, 'me']);
+    Route::get('/auth/me', [AuthController::class, 'me']);
     
     // Dashboard data - all stats in one call
     Route::get('/main-d', [DashboardController::class, 'getDashboardData'])->middleware('admin');
@@ -142,23 +145,5 @@ Route::get('/reviews/four', [ReviewController::class, 'getFourReviews']);
 Route::get('/reviews/publishable', [ReviewController::class, 'getPublishableReviews']);
 
 
-// routes/web.php or routes/api.php
-use Stripe\Stripe;
-use Stripe\Balance;
 
-Route::get('/test-stripe', function () {
-    Stripe::setApiKey(config('services.stripe.secret'));
-
-    try {
-        $balance = Balance::retrieve();
-        return response()->json([
-            'status' => 'success',
-            'balance' => $balance
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'status' => 'error',
-            'message' => $e->getMessage()
-        ], 500);
-    }
-});
+Route::post('/book-with-payment', [BookWithPayment::class, 'bookWithPayment'])->middleware('throttle:3,1'); 
