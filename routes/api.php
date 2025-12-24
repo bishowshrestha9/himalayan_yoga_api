@@ -13,7 +13,9 @@ use App\Http\Controllers\api\InquiryController;
 use App\Http\Controllers\api\BookingController;
 use App\Http\Controllers\api\DashboardController;
 use App\Http\Controllers\payment\PaymentController;
+use App\Http\Controllers\payment\TwoCheckoutController;
 use App\Http\Controllers\api\BookWithPayment;
+
 
 
 // Public routes with rate limiting
@@ -50,7 +52,7 @@ Route::post('/inquiries', [InquiryController::class, 'store'])->middleware('thro
 // Protected routes - use Sanctum for authentication
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('logout', [AuthController::class, 'logout']);
-    
+
     // Admin-only blog management
     Route::prefix('blogs')->middleware('admin')->group(function () {
         Route::post('/', [BlogsController::class, 'store']);
@@ -58,23 +60,23 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/{id}', [BlogsController::class, 'destroy']);
         Route::get('/total', [BlogsController::class, 'getTotalBlogs']);
     });
-    
+
     // Admin-only review management
     Route::prefix('reviews')->middleware('admin')->group(function () {
         Route::get('/', [ReviewController::class, 'getReviews']);
-        
+
         Route::delete('/{id}', [ReviewController::class, 'delete']);
         Route::post('/{id}/approve', [ReviewController::class, 'approveReview']);
-        Route::get('/pn',[ReviewController::class,'getPositiveAndNegativeReviewsCount']);
+        Route::get('/pn', [ReviewController::class, 'getPositiveAndNegativeReviewsCount']);
     });
-    
+
     // Admin-only instructor management
     Route::prefix('instructors')->middleware('admin')->group(function () {
         Route::post('/', [InstructorController::class, 'store']);
         Route::post('/{id}', [InstructorController::class, 'update']); // Use POST for file uploads
         Route::delete('/{id}', [InstructorController::class, 'destroy']);
     });
-    
+
     // Admin-only service management
     Route::prefix('services')->middleware('admin')->group(function () {
         Route::post('/', [ServiceController::class, 'store']);
@@ -83,7 +85,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/{id}', [ServiceController::class, 'destroy']);
         Route::get('/total', [ServiceController::class, 'getTotalServices']);
     });
-    
+
     // Admin-only inquiry management
     Route::prefix('inquiries')->middleware('admin')->group(function () {
         Route::get('/', [InquiryController::class, 'index']);
@@ -91,14 +93,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/{id}', [InquiryController::class, 'destroy']);
         Route::get('/total/count', [InquiryController::class, 'getTotalInquiry']);
     });
-    
+
     // Super admin only routes for user management
     Route::prefix('users')->middleware('admin')->group(function () {
         Route::post('/admin', [UserController::class, 'addAdmin']);
         Route::post('/{id}/status', [UserController::class, 'updateStatus']);
-       
+
     });
-    
+
     // Admin-only booking management
     Route::prefix('bookings')->middleware('admin')->group(function () {
         Route::get('/', [BookingController::class, 'index']);
@@ -106,12 +108,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/total', [BookingController::class, 'getTotalBookings']);
         Route::get('/monthly-revenue', [BookingController::class, 'getMonthlyRevenue']);
     });
-    
+
     Route::post('users/change-password', [UserController::class, 'changePassword']);
-    
+
     Route::get('/user', [AuthController::class, 'me']);
     Route::get('/auth/me', [AuthController::class, 'me']);
-    
+
     // Dashboard data - all stats in one call
     Route::get('/main-d', [DashboardController::class, 'getDashboardData'])->middleware('admin');
 });
@@ -120,12 +122,27 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::prefix('payment')->group(function () {
     // Public routes - Called by your frontend
     Route::post('/create-payment-intent', [PaymentController::class, 'createPaymentIntent']);
-    Route::post('/cancel-payment-intent/{id}', [PaymentController::class, 'handlePaymentCanceled']); 
-    
-    
+    Route::post('/cancel-payment-intent/{id}', [PaymentController::class, 'handlePaymentCanceled']);
+
+
     // Webhook - Called ONLY by Stripe servers (not from frontend!)
     // Configure this URL in your Stripe Dashboard: https://dashboard.stripe.com/webhooks
     Route::post('/webhook', [PaymentController::class, 'webhook']);
+
+    // 2Checkout routes
+    Route::prefix('2checkout')->group(function () {
+        // Public routes - Called by your frontend
+        Route::post('/create-order', [TwoCheckoutController::class, 'createOrder']);
+        Route::get('/config', [TwoCheckoutController::class, 'getConfig']);
+
+        // Token-based charge endpoint - for direct card payments
+        Route::post('/charge', [TwoCheckoutController::class, 'chargeToken']);
+
+        // IPN Webhook - Called ONLY by 2Checkout servers (not from frontend!)
+        // Configure this URL in your 2Checkout account: Integrations > Webhooks & API > IPN
+        // Accepts both GET (for verification) and POST (for actual IPNs)
+        Route::match(['get', 'post'], '/ipn', [TwoCheckoutController::class, 'handleIPN']);
+    });
 });
 
 // Public booking creation - rate limited
@@ -146,4 +163,4 @@ Route::get('/reviews/publishable', [ReviewController::class, 'getPublishableRevi
 
 
 
-Route::post('/book-with-payment', [BookWithPayment::class, 'bookWithPayment'])->middleware('throttle:3,1'); 
+Route::post('/book-with-payment', [BookWithPayment::class, 'bookWithPayment'])->middleware('throttle:3,1');

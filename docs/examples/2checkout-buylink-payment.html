@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2Checkout Payment - Buy Link Method</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .payment-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            max-width: 500px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .submit-button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .submit-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .message {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+            display: block;
+        }
+
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .secure-badge {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 12px;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #1976D2;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="payment-container">
+        <h2>Complete Payment</h2>
+        <p class="subtitle">You'll be redirected to 2Checkout's secure payment page</p>
+
+        <div class="info-box">
+            ℹ️ After clicking "Proceed to Payment", you'll be securely redirected to 2Checkout to complete your payment.
+        </div>
+
+        <div id="message" class="message"></div>
+
+        <form id="paymentForm">
+            <!-- Customer Information -->
+            <div class="form-group">
+                <label for="fullName">Full Name *</label>
+                <input type="text" id="fullName" name="fullName" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address *</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+
+            <div class="form-group">
+                <label for="phoneNumber">Phone Number *</label>
+                <input type="tel" id="phoneNumber" name="phoneNumber" required>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description *</label>
+                <input type="text" id="description" name="description" value="Yoga Class Booking" required>
+            </div>
+
+            <div class="form-group">
+                <label for="amount">Amount (USD) *</label>
+                <input type="number" id="amount" name="amount" step="0.01" min="1" value="100.00" required>
+            </div>
+
+            <div class="form-group">
+                <label for="currency">Currency *</label>
+                <select id="currency" name="currency">
+                    <option value="USD">USD - US Dollar</option>
+                    <option value="EUR">EUR - Euro</option>
+                    <option value="GBP">GBP - British Pound</option>
+                    <option value="AUD">AUD - Australian Dollar</option>
+                </select>
+            </div>
+
+            <button type="submit" class="submit-button" id="submitBtn">
+                Proceed to Payment
+            </button>
+        </form>
+
+        <div class="secure-badge">
+            🔒 Secured by 2Checkout
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_BASE_URL = '/api';
+
+        const form = document.getElementById('paymentForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const messageDiv = document.getElementById('message');
+
+        // Show message
+        function showMessage(message, type = 'error') {
+            messageDiv.textContent = message;
+            messageDiv.className = `message ${type}`;
+            setTimeout(() => {
+                messageDiv.className = 'message';
+            }, 5000);
+        }
+
+        // Set loading state
+        function setLoading(isLoading) {
+            submitBtn.disabled = isLoading;
+            submitBtn.innerHTML = isLoading
+                ? '<span class="loading-spinner"></span>Creating order...'
+                : 'Proceed to Payment';
+        }
+
+        // Handle form submission
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            setLoading(true);
+
+            try {
+                const formData = {
+                    fullName: document.getElementById('fullName').value,
+                    email: document.getElementById('email').value,
+                    phoneNumber: document.getElementById('phoneNumber').value,
+                    description: document.getElementById('description').value,
+                    amount: parseFloat(document.getElementById('amount').value),
+                    currency: document.getElementById('currency').value,
+                    products: [{
+                        name: document.getElementById('description').value,
+                        quantity: 1,
+                        price: parseFloat(document.getElementById('amount').value)
+                    }]
+                };
+
+                // Call backend to create order
+                const response = await fetch(`${API_BASE_URL}/payment/2checkout/create-order`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Build 2Checkout URL
+                    const checkoutUrl = build2CheckoutUrl(result.data);
+
+                    // Redirect to 2Checkout
+                    console.log('Redirecting to 2Checkout:', checkoutUrl);
+                    window.location.href = checkoutUrl;
+                } else {
+                    showMessage(result.message || 'Failed to create order. Please try again.', 'error');
+                    setLoading(false);
+                }
+            } catch (error) {
+                console.error('Payment error:', error);
+                showMessage('An error occurred. Please try again.', 'error');
+                setLoading(false);
+            }
+        });
+
+        // Build 2Checkout checkout URL
+        function build2CheckoutUrl(orderData) {
+            const baseUrl = 'https://secure.2checkout.com/checkout/buy';
+
+            const params = new URLSearchParams({
+                'merchant': orderData.merchant_code,
+                'tco-currency': orderData.currency,
+                'tco-amount': orderData.amount,
+                'order-ext-ref': orderData.order_reference,
+                'customer-name': orderData.customer.name,
+                'customer-email': orderData.customer.email,
+                'customer-phone': orderData.customer.phone,
+                'return-url': orderData.return_url,
+                'cancel-url': orderData.cancel_url,
+                'signature': orderData.signature
+            });
+
+            // Add products
+            orderData.products.forEach((product, index) => {
+                params.append(`li_${index}_name`, product.name);
+                params.append(`li_${index}_quantity`, product.quantity);
+                params.append(`li_${index}_price`, product.price);
+            });
+
+            return `${baseUrl}?${params.toString()}`;
+        }
+
+        console.log('=== 2Checkout Buy Link Payment ===');
+        console.log('This will redirect you to 2Checkout\'s secure payment page');
+    </script>
+</body>
+
+</html>

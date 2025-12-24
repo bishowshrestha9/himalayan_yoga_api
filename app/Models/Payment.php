@@ -19,11 +19,16 @@ class Payment extends Model
         'failure_message',
         'payment_intent_id',
         'client_secret',
-
+        'isAdvancePayment',
+        'advancePercentage',
+        'fullAmount',
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
+        'advancePercentage' => 'decimal:2',
+        'fullAmount' => 'decimal:2',
+        'isAdvancePayment' => 'boolean',
         'paid_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
@@ -31,7 +36,7 @@ class Payment extends Model
 
     // Status constants
     const STATUS_PENDING = 'pending';
-    const STATUS_SUCCEEDED = 'succeeded';   
+    const STATUS_SUCCEEDED = 'succeeded';
     const STATUS_FAILED = 'failed';
     const STATUS_CANCELED = 'canceled';
 
@@ -117,7 +122,7 @@ class Payment extends Model
         return $this;
     }
 
-  
+
 
 
 }

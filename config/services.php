@@ -41,4 +41,13 @@ return [
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
     ],
 
+    'twocheckout' => [
+        'merchant_code' => env('TWOCHECKOUT_MERCHANT_CODE'), // Publishable Key
+        'secret_key' => env('TWOCHECKOUT_SECRET_KEY'), // Private Key
+        'buy_link_secret' => env('TWOCHECKOUT_BUY_LINK_SECRET'), // Secret Word for signature
+        'publishable_key' => env('TWOCHECKOUT_PUBLISHABLE_KEY'),
+        'private_key' => env('TWOCHECKOUT_PRIVATE_KEY'),
+        'sandbox' => env('TWOCHECKOUT_SANDBOX', true),
+    ],
+
 ];
